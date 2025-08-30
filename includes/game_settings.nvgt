@@ -27,7 +27,7 @@ else
 ms= f_UI.create_checkbox("&menu side scrolling",true);
 }
 int sml = f_UI.create_list("Select a music &track to be played in the main menu");
-string[] filelist = cast<pack@>(sound_default_pack).list_files();
+string[] filelist = cast<pack_file@>(sound_default_pack).list_files();
 for(uint i=0; i<filelist.length(); i++)
 {
 if(string_left(filelist[i],7)=="menumus")

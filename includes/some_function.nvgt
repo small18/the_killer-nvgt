@@ -25,7 +25,7 @@ return false;
 }
 bool is_sound_exists(string s)
 {
-string[] filelist=cast<pack@>(sound_default_pack).list_files();
+string[] filelist=cast<pack_file@>(sound_default_pack).list_files();
 for(uint i = 0; i < filelist.length(); i++)
 {
 if(s==filelist[i])
