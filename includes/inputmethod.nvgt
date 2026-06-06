@@ -1,10 +1,24 @@
 library inputmethod;
+/*
 void enable_input()
 {
 inputmethod.load("imm32.dll");
 int e=-1;
 e = inputmethod.call("int ImmAssociateContext(uint64 , int )",get_window_os_handle(),0);
 imm=e;
+}
+*/
+void enable_input()
+{
+    inputmethod.load("imm32.dll");
+    
+    uint64 prev = inputmethod.call(
+        "uint64 ImmAssociateContext(uint64, uint64)",
+        get_window_os_handle(),
+        0
+    );
+
+    imm = prev;
 }
 void disable_input()
 {
