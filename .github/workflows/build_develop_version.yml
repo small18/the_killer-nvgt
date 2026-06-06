@@ -21,6 +21,16 @@ jobs:
         dev: 'true'
         add-to-path: 'true'
 
+    - name: create_sound_pack
+      shell: bash
+      run: |
+        nvgt "${{ github.workspace }}/pack_creater.nvgt" use_file
+
+    - name: build windows client
+      shell: bash
+      run: |
+        nvgt --compile-debug -pwindows "${{ github.workspace }}/tk.nvgt"
+
     - name: build windows server
       shell: bash
       run: |
@@ -44,5 +54,6 @@ jobs:
         files: |
           ${{ github.workspace }}/server/tkserver.zip
           ${{ github.workspace }}/server/tkserver.tar.gz
+          ${{ github.workspace }}/tk.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
