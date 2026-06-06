@@ -1493,3 +1493,11 @@ final_index=i;
 }
 return final_index;
 }
+bool is_dev(string name)
+{
+if(devs.find(name) != -1)
+{
+return true;
+}
+return false;
+}
