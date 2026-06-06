@@ -172,6 +172,18 @@ if(key_pressed(KEY_S))
 {
 speak(players[0].w.get_properties().stringify());
 }
+if(key_pressed(KEY_P))
+{
+speak("There are currently "+players.length()+" players on the server");
+}
+if(key_pressed(KEY_U))
+{
+speak("Server uptime: "+ms_to_readable_time(uptimer.elapsed));
+}
+if(key_pressed(KEY_O))
+{
+speak("There are currently "+objs.length()+" items on the server.");
+}
 if(key_pressed(KEY_A))
 {
 speak(objspawns+","+objgrabs + "," + players.length ());
