@@ -1,6 +1,7 @@
 name: build_develop_version
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "dev" ]
 
