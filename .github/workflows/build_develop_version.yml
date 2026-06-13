@@ -14,6 +14,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Call Setup NVGT Action
       uses: ./.github/actions/setup-nvgt
@@ -40,6 +42,15 @@ jobs:
       shell: bash
       run: |
         nvgt --compile-debug -p linux "${{ github.workspace }}/server/tkserver.nvgt"
+
+    - name: Update Release Tag
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git tag -d latest-develop-version || true
+        git push origin :refs/tags/latest-develop-version || true
+        git tag latest-develop-version
+        git push origin latest-develop-version
 
     - name: Update Latest Release
       uses: softprops/action-gh-release@v2
