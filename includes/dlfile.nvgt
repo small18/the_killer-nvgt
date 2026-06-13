@@ -17,6 +17,8 @@ speak(status);
 wait(600);
 return status;
 }
+if(!dl.get_inprogress())
+{
 if (key_pressed(KEY_1))
 {
 string size=round(dl.get_total_size()/1024/1024, 2)+" MB ("+round(dl.get_total_size()/1024, 2)+" KB)";
@@ -32,14 +34,22 @@ if (key_pressed(KEY_3))
 string size=round(dl.get_remaining_size()/1024/1024, 2)+" MB ("+round(dl.get_remaining_size()/1024, 2)+" KB)";
 speak("Total remaining: "+size);
 }
+}
 if(round(dl.get_percentage(),0)!=dlpercent)
 {
 dlpercent=round(dl.get_percentage(),0);
-beep_percentage(dlpercent);
+if(!dl.get_inprogress()) beep_percentage(dlpercent);
 }
 if (key_pressed(KEY_SPACE))
 {
+if(dl.get_inprogress())
+{
+speak("in progress");
+}
+else
+{
 speak(dl.get_percentage()+" percent");
+}
 }
 }
 if (status!="canceled")
