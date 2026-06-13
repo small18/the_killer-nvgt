@@ -44,7 +44,10 @@ jobs:
         nvgt --compile-debug -p linux "${{ github.workspace }}/server/tkserver.nvgt"
 
     - name: Update Release Tag
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        gh release delete "latest-develop-version" --yes || true
         git config --global user.name "github-actions[bot]"
         git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git tag -d latest-develop-version || true
