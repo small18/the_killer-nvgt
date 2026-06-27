@@ -177,7 +177,7 @@ if(weapons[j].type.stunning)
 players[x].stun(weapons[j].type.stun_time,false,false);
 }
 players[x].hitby=weapons[j].p.name+"'s "+weapons[j].type.name;
-if(weapons[j].type.name=="artillery") players[x].hitby=weapons[j].p.name+"'s tank";
+if(!weapons[j].type.nickname.is_empty()) players[x].hitby=weapons[j].p.name+"'s "+weapons[j].type.nickname;
 }
 if(weapons[j].type.name=="sticky_bomb")
 {
@@ -271,7 +271,7 @@ if(weapons[j].type.name=="artillery") send_reliable(weapons[j].p.peer_id,"hit "+
 if(weapons[j].type.name=="artillery1") send_reliable(weapons[j].p.peer_id,"hit "+cn2n(helicopters[x].owner)+"'s helicopter "+helicopters[x].id,2);
 helicopters[x].health-=random(weapons[j].type.min_damage, weapons[j].type.max_damage);
 play("helicopterhit"+random(1, 9), rx, ry, weapons[j].z, weapons[j].map);
-helicopters[x].hitby=weapons[j].p.name+"'s "+(weapons[j].type.name=="artillery" ? "tank" : weapons[j].type.name);
+helicopters[x].hitby=weapons[j].p.name+"'s "+(weapons[j].type.nickname.is_empty()==false ? weapons[j].type.nickname : weapons[j].type.name);
 helicopters[x].hitby=weapons[j].p.name+"'s "+(weapons[j].type.name=="artillery1" ? "armored tank" : weapons[j].type.name);
 hit=true;
 if(weapons[j].type.name=="grenade")
@@ -412,7 +412,7 @@ send_reliable(weapons[j].p.peer_id,"play_s|weaponping.ogg",0);
 if(weapons[j].type.name=="artillery") send_reliable(weapons[j].p.peer_id,"hit "+cn2n(remguns[x].owner)+"'s remote gun "+remguns[x].id,2);
 remguns[x].health-=random(weapons[j].type.min_damage, weapons[j].type.max_damage);
 play("remgunhit"+random(1, 3), rx, ry, weapons[j].z, weapons[j].map);
-remguns[x].hitby=weapons[j].p.name+"'s "+(weapons[j].type.name=="artillery" ? "tank" : weapons[j].type.name);
+remguns[x].hitby=weapons[j].p.name+"'s "+(weapons[j].type.nickname.is_empty()==false ? weapons[j].type.nickname : weapons[j].type.name);
 hit=true;
 if(weapons[j].type.name=="grenade")
 {
@@ -545,7 +545,7 @@ if(weapons[j].type.name=="m79_grenade_launcher")
 {
 spawn_grenade(vs[v].x,vs[v].y,vs[v].z,vs[v].facing,vs[v].map,weapons[j].p.name);
 }
-vs[v].hit(random(weapons[j].type.min_damage,weapons[j].type.max_damage),weapons[j].p.name+"'s "+string_replace(weapons[j].type.name,"artillery","tank",false),t);
+vs[v].hit(random(weapons[j].type.min_damage,weapons[j].type.max_damage),weapons[j].p.name+"'s "+weapons[j].type.nickname.is_empty()==false ? weapons[j].type.nickname : weapons[j].type.name);
 
 if(@weapons[j].p!=null)
 {
