@@ -23,6 +23,8 @@ int walk_time = 100;
 int can_jump = 1;
 string fire_mode = "norm";
 bool equipable = false;
+bool hit_owner;
+string nickname;
 weapon_data(string data)
 {
 @this.data = parse_json(data);
@@ -98,6 +100,8 @@ if(w.exists("max_shield_hits")&&!w.is_null("max_shield_hits")) w1.max_shield_hit
 if(w.exists("stunning")&&!w.is_null("stunning")) w1.stunning = w["stunning"];
 if(w.exists("stun_time")&&!w.is_null("stun_time")) w1.stun_time = w["stun_time"];
 if(w.exists("team_hittable")&&!w.is_null("team_hittable")) w1.team_hittable = w["team_hittable"];
+if(w.exists("hit_owner")&&!w.is_null("hit_owner")) w1.hit_owner = w["hit_owner"];
+if(w.exists("nickname")&&!w.is_null("nickname")) w1.nickname = w["nickname"];
 wdata.insert_last(w1);
 }
 wdata_check();

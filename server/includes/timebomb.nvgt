@@ -35,71 +35,14 @@ play("timebombbeep",timebombs[i].x,timebombs[i].y,timebombs[i].z,timebombs[i].ma
 }
 if (timebombs[i].seconds<=0)
 {
+int index = get_player_index_from(timebombs[i].owner);
+if(index>-1)
+{
 play("timebombexplode",timebombs[i].x,timebombs[i].y,timebombs[i].z,timebombs[i].map);
 if(timebombs[i].r==3)
 spawn_fire(timebombs[i].x,timebombs[i].y,timebombs[i].z,timebombs[i].map,random(400,700));
 send_reliable(0,"distsound|timebombexplodedist|"+timebombs[i].x+"|"+timebombs[i].y+"|"+timebombs[i].z+"|"+timebombs[i].map,0);
-for(uint i2=0; i2<impact_bombs.length(); i2++)
-{
-if(get_3d_distance(impact_bombs[i2].x,impact_bombs[i2].y,impact_bombs[i2].z,timebombs[i].x,timebombs[i].y,timebombs[i].z)<=20 and impact_bombs[i2].map==timebombs[i].map)
-{
-impact_bombs[i2].health-=random(500,1500);
-play("ibombhit"+random(1,3),impact_bombs[i2].x,impact_bombs[i2].y,impact_bombs[i2].z,impact_bombs[i2].map);
-}
-}
-for (uint i2=0; i2<players.length(); i2++)
-{
-if(players[i2].invinsible==true || players[i2].newb==1 || players[i2].is_dead==true||in_vehicle(players[i2].name)>-1) continue;
-if (get_3d_distance(timebombs[i].x,timebombs[i].y,timebombs[i].z,players[i2].x,players[i2].y,players[i2].z)<=20 and players[i2].map==timebombs[i].map)
-{
-players[i2].hit(1000,3000);
-players[i2].should_subtract=true;
-players[i2].hitby=timebombs[i].owner+"'s Timebomb";
-}
-}
-for(uint h = 0; h < helicopters.length(); h++)
-{
-if(get_3d_distance(timebombs[i].x,timebombs[i].y,timebombs[i].z,helicopters[h].x,helicopters[h].y,helicopters[h].z)<=timebombs[i].range&&timebombs[i].map==helicopters[h].map)
-{
-helicopters[h].health-=random(timebombs[i].mindammage, timebombs[i].maxdammage);
-play("helicopterhit"+random(1, 9), helicopters[h].x, helicopters[h].y, helicopters[h].z, helicopters[h].map);
-helicopters[h].hitby=timebombs[i].owner+"'s Timebomb";
-}
-}
-for(uint r = 0; r < robots.length(); r++)
-{
-if (robots[r].state>=ROBOT_KILL or robots[r].map!=timebombs[i].map) continue;
-if(get_3d_distance(timebombs[i].x,timebombs[i].y,timebombs[i].z,robots[r].x,robots[r].y,robots[r].z)<=timebombs[i].range)
-{
-robots[r].hit(random(timebombs[i].mindammage,timebombs[i].maxdammage),"Timebomb",timebombs[i].owner);
-}
-}
-for (uint i2=0; i2<objs.length(); i2++)
-{
-if (get_3d_distance(timebombs[i].x,timebombs[i].y,timebombs[i].z,objs[i2].x,objs[i2].y,objs[i2].z)<=20 and objs[i2].map==timebombs[i].map)
-{
-play("obj_break"+random(1,3),objs[i2].x,objs[i2].y,objs[i2].z,objs[i2].map);
-remove_obj(i2);
-}
-}
-for (uint i2=0; i2<remguns.length(); i2++)
-{
-if (get_3d_distance(timebombs[i].x,timebombs[i].y,timebombs[i].z,remguns[i2].x,remguns[i2].y,remguns[i2].z)<=20 and remguns[i2].map==timebombs[i].map)
-{
-remguns[i2].health-=random(500, 1500);
-remguns[i2].hitby=timebombs[i].owner+"'s time bomb";
-play("remgunhit"+random(1, 3),remguns[i2].x,remguns[i2].y,remguns[i2].z,remguns[i2].map);
-}
-}
-for(uint s=0; s<shelters.length (); s++)
-{
-if(get_3d_distance(timebombs[i].x,timebombs[i].y,timebombs[i].z,shelters[s].x,shelters[s].y,shelters[s].z)<=30&&shelters[s].map==timebombs[i].map)
-shelters[s].hit(random(500,1500),timebombs[i].owner+"'s timebomb");
-}
-for(uint v=0; v<vs.length (); v++)
-{
-if(get_3d_distance(timebombs[i].x,timebombs[i].y,timebombs[i].z,vs[v].x,vs[v].y,vs[v].z)<=30&&vs[v].map==timebombs[i].map)
-vs[v].hit(random(500,1500),timebombs[i].owner+"'s timebomb");
+spawn_weapon(timebombs[i].x, timebombs[i].y, timebombs[i].z, 0, "timebomb",timebombs[i].map,players[index]);
 }
 @timebombs[i]=null;
 timebombs.remove_at(i);

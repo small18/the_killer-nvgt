@@ -39,7 +39,6 @@ weapons[j].x=wr.x;
 weapons[j].y=wr.y;
 int rx=round(weapons[j].x, 0);
 int ry=round(weapons[j].y, 0);
-weapons[j].distance++;
 if(weapons[j].distance > weapons[j].type.range or string_left(get_tile_at(rx,ry,weapons[j].z,weapons[j].map),4)=="wall" or rx>weapons[j].maxcoords.x or ry>weapons[j].maxcoords.y or rx<0 or ry<0)
 {
 if(weapons[j].type.bullet)
@@ -111,6 +110,7 @@ else
 weapons.remove_at(j);
 break;
 }
+weapons[j].distance++;
 }
 bool hit=false;
 string sendtext="";
@@ -143,8 +143,9 @@ continue;
 for(uint x=0; x<players.length(); x++)
 {
 if(in_vehicle(players[x].name)>-1 or players[x].is_dead or players[x].invinsible or players[x].newb==1) continue;
-if(get_3d_distance(rx, ry, weapons[j].z, players[x].x, players[x].y, players[x].z)<=weapons[j].type.spread and weapons[j].p.name!=players[x].name and players[x].map==weapons[j].map)
+if(get_3d_distance(rx, ry, weapons[j].z, players[x].x, players[x].y, players[x].z)<=weapons[j].type.spread and players[x].map==weapons[j].map)
 {
+if(weapons[j].type.hit_owner==false&&weapons[j].p.name==players[x].name) continue;
 send_reliable(weapons[j].p.peer_id,"play_s|"+(are_teamed(weapons[j].p.name, players[x].name)?"weaponpingteam":"weaponping")+".ogg",0);
 if(weapons[j].type.name=="artillery") send_reliable(weapons[j].p.peer_id,"hit "+players[x].nickname,2);
 hit=true;
