@@ -27,7 +27,7 @@ obj@[] objs1;
 objs1 = objs;
 for(uint i = 0; i < objs1.length(); i++)
 {
-if(objs1[i].beeptimer.elapsed>=750&&objs1[i].map==mapname)
+if(objs1[i].beeptimer.elapsed>=750&&objs1[i].map==mapname&&in_map)
 {
 objs1[i].beeptimer.restart();
 objpool.play_3d("obj.ogg", me.x, me.y, me.z, objs1[i].x, objs1[i].y, objs1[i].z, calculate_theta(facing), false);

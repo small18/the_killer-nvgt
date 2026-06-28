@@ -55,9 +55,9 @@ connectionmenu();
 }
 if(e.type==event_disconnect or timeouttimer.elapsed>=timeouttime)
 {
+reset_network();
 p.play_stationary("progress.ogg",false);
 dlg("server is offline");
-reset_network();
 connectionmenu();
 }
 if(e.type==event_connect and connected==false)
@@ -69,6 +69,7 @@ connected=true;
 }
 else if(e.type==event_receive and get_event_message(e.message)=="createdchar")
 {
+reset_network();
 p.play_stationary("progress.ogg",false);
 dlg("success! Account created! Press enter to login.");
 name=name;
@@ -78,23 +79,24 @@ login();
 }
 else if(e.type==event_receive and get_event_message(e.message)=="alreadyaccount")
 {
+reset_network();
 p.play_stationary("progress.ogg",false);
 dlg("Error: This computer is already associated with another account");
-reset_network();
 connectionmenu();
 }
 else if(e.type==event_receive and get_event_message(e.message)=="alreadyexists")
 {
+reset_network();
 p.play_stationary("progress.ogg",false);
 dlg("This account already exists");
-reset_network();
 connectionmenu();
 }
 else if(e.type==event_receive and string_contains(get_event_message(e.message),"Error",1)>-1)
 {
-p.play_stationary("progress.ogg",false);
-dlg(get_event_message(e.message));
+string s = get_event_message(e.message);
 reset_network();
+p.play_stationary("progress.ogg",false);
+dlg(s);
 connectionmenu();
 }
 }
