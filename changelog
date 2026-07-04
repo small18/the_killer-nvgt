@@ -1,3 +1,5 @@
+2026年7月5日
+1·加入了antibiotic_pack
 2026年5月3日
 1·修复登录时客户端反复获取网络信息的bug。
 2·使用string_deflate和string_inflate方法压缩数据包。

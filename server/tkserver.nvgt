@@ -2832,6 +2832,13 @@ players[index].give("antibiotic",50);
 play("gift",players[index].x,players[index].y,players[index].z,players[index].map);
 players[index].give("empty_pack", 1);
 }
+else if(wname=="antibiotic_pack")
+{
+takeobj = true;
+players[index].give("antibiotic",20);
+play("gift",players[index].x,players[index].y,players[index].z,players[index].map);
+players[index].give("empty_pack", 1);
+}
 else if(wname=="gas_mask")
 {
 takeobj=false;
