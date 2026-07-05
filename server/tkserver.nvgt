@@ -164,7 +164,7 @@ tempbanloop();
 }
 catch
 {
-
+log ("error",get_exception_info()+":"+get_exception_line());
 }
 //loops();
 if(key_pressed(KEY_ESCAPE) || s_quit)
@@ -7961,7 +7961,7 @@ send_reliable(id, "loggedin", 0);
 }
 catch
 {
-alert (get_exception_info(),get_exception_line());
+//alert (get_exception_info(),get_exception_line());
 }
 }
 }
