@@ -23,7 +23,7 @@ int objgrabs=0, objspawns=0;
 string adminlog;
 string[] guns={"crossbow","sky_28_laser","ags30","glock_17_pistol","beretta_m1951_machine_pistol","sig_p226_combat_pistol","modern_sub_machine_gun_carbine","cop_357_derringer_pistol","m79_grenade_launcher","stp21_handgun","str_301_long_barreled_machine_pistol","fnminimilight","beretta_nano_pocket_pistol","mlk_207_combat_rifle","colt_ar_15_assault_rifle","stp106_long_barreled_pistol","nak_nk1000_decimater","barrett_m82_sniper_rifle","cyanide_pistol","m16_assault_rifle","str_32_pump_action_shotgun","crt43_automatic_shotgun","pistol","shotgun","gp30","throwing_knives","hand_cannon","sky_327_laser_cannon","taser","rpg7","rocket_launcher","gauss","cannon","awp","sniper","zulfikar","storm_sniper","m24_sniper_rifle","ak47_assault_rifle","blz83_portable_machine_gun","browning_high_power_bda_handgun","browning_m2_heavy_50_cal_machinegun","colt_python_revolver","flameburst_mini_flame_thrower","m4a1_assault_rifle","m134_minigun","m1208_shotgun","mlk_203_combat_pistol","mp5_machine_pistol","ruger_security_6_revolver","s&w_model66_revolver","saiga_12_5_round_shotgun","saiga_12_10_round_shotgun","saiga_12_20_round_shotgun","saiga_12_30_round_shotgun","sky_127_laser_handgun","stp_s84q_automatic_suppressed_pistol","dart_launcher","walther_p99_handgun","beretta_m9_pistol"};
 string[] cold_weapons={"knife","spiked_chain_mace","studded_boots","spiked_bat","steal_warhammer","small_iron_club","small_sabre","crt17_combat_knife","small_hammer","small_dagger","machete","sky_429_laser_shotgun","sky_372_laser_machinegun","sky_386_laser_assault_rifle","sky_286_laser_pistol","rusty_scalpel","large_iron_club","nunchaku","crow_bar","rusty_axe","long_sword","iron_shovel","scissor_blade","garden_spade","hammer","golden_war_axe","brass_knuckles","broken_rifle","feet","fists","short_sword","spear","stp_m4_combat_knife"};
-string[] devs = {"enter_dev_name_hear"};
+string[] devs = {"lihaha"};
 int maxobjs=500;
 string[] newbitems={"antibiotic","antibiotic_pack","mini_antibiotic_pack","antibiotic_pack","tk_ultra_health_potion"};
 string[] killmsgs;
@@ -393,6 +393,14 @@ return;
 }
 send_menu(players[index].peer_id, "Copy who?", "copy", items);
 }
+}
+}
+else if(parsed[0]=="updatezone")
+{
+int index = get_player_index(e.peer_id);
+if(index>-1)
+{
+players[index].zone=s.replace("updatezone|","");
 }
 }
 else if(parsed[0]=="playermenu")
