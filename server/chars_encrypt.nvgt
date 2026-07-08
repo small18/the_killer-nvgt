@@ -1,0 +1,23 @@
+void main ()
+{
+string[] chars=find_files("chars/*");
+for (uint i=0; i<chars.length(); i++)
+{
+change (chars[i]);
+}
+alert ("success",chars.length());
+}
+
+void change (string dir)
+{
+
+json_object js;
+file f;
+
+f.open ("chars/"+dir,"rb");
+string _file=f.read();
+f.close();
+f.open ("chars/"+dir,"wb");
+f.write (string_aes_encrypt(_file,"jslkdjvoigvrvklsdfnkjfsklsdjlfkawejioejgiksrdfnhkjzskldjfklejgkivjkgjtjtestestejkij"));
+f.close ();
+}

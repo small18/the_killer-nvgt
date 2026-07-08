@@ -164,7 +164,7 @@ tempbanloop();
 }
 catch
 {
-
+log ("error",get_exception_info()+":"+get_exception_line());
 }
 //loops();
 if(key_pressed(KEY_ESCAPE) || s_quit)
@@ -2837,6 +2837,13 @@ else if(wname=="ultra_antibiotic_pack")
 {
 takeobj = true;
 players[index].give("antibiotic",50);
+play("gift",players[index].x,players[index].y,players[index].z,players[index].map);
+players[index].give("empty_pack", 1);
+}
+else if(wname=="antibiotic_pack")
+{
+takeobj = true;
+players[index].give("antibiotic",20);
 play("gift",players[index].x,players[index].y,players[index].z,players[index].map);
 players[index].give("empty_pack", 1);
 }
@@ -7962,7 +7969,7 @@ send_reliable(id, "loggedin", 0);
 }
 catch
 {
-alert (get_exception_info(),get_exception_line());
+//alert (get_exception_info(),get_exception_line());
 }
 }
 }
