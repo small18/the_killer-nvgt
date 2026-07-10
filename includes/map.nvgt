@@ -139,6 +139,7 @@ if (t!=last_zone)
 {
 speak ( t );
 last_zone = t;
+send_reliable(0,"updatezone|"+last_zone,0);
 }
 }
 else

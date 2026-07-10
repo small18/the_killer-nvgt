@@ -396,6 +396,14 @@ send_menu(players[index].peer_id, "Copy who?", "copy", items);
 }
 }
 }
+else if(parsed[0]=="updatezone")
+{
+int index = get_player_index(e.peer_id);
+if(index>-1)
+{
+players[index].zone=s.replace("updatezone|","");
+}
+}
 else if(parsed[0]=="playermenu")
 {
 int x;
