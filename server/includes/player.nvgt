@@ -660,9 +660,9 @@ scd(i);
 send_reliable(0, "offline|"+players[i].x+"|"+players[i].y+"|"+players[i].z+"|"+players[i].name+"|"+players[i].map, 0);
 if(!players[i].disconnected)
 send_reliable(players[i].peer_id, "offline|"+players[i].x+"|"+players[i].y+"|"+players[i].z+"|"+players[i].name+"|"+players[i].map, 0);
-@players[i]=null;
 players.remove_at(i);
 //if(oldid!=4294967294) send_reliable(oldid,"killclient",0);
+i--;
 continue;
 }
 }

@@ -24,9 +24,11 @@ this.dropped=dropped;
 }
 void objloop()
 {
-for(uint i=0;i<objs.length();i++)
+obj@[] objs1;
+objs1=objs;
+for(uint i=0;i<objs1.length();i++)
 {
-if (@objs[i]==null)
+if (@objs1[i]==null)
 {
 continue;
 }
@@ -37,7 +39,7 @@ objs[i].beeptimer.restart();
 play("obj", objs[i].x, objs[i].y, objs[i].z, objs[i].map,-1,true,false);
 }
 */
-if(objs[i].timeouttimer.elapsed>=120000)
+if(objs1[i].timeouttimer.elapsed>=120000)
 {
 play("obj_break"+random(1,3),objs[i].x,objs[i].y,objs[i].z,objs[i].map);
 if (objs.length() < i) return;
@@ -50,16 +52,16 @@ for(uint x=0; x<players1.length(); x++)
 {
 if(x>players.length()) break;
 if(players1[x].invinsible==true or players1[x].is_dead==true) continue;
-if(get_3d_distance(objs[i].x,objs[i].y,objs[i].z,players1[x].x,players1[x].y,players1[x].z)<=4 and players1[x].map==objs[i].map)
+if(get_3d_distance(objs1[i].x,objs1[i].y,objs1[i].z,players1[x].x,players1[x].y,players1[x].z)<=4 and players1[x].map==objs1[i].map)
 {
 play("objget", objs[i].x, objs[i].y, objs[i].z, objs[i].map);
 objgrabs++;
-if(objs[i].name=="coin_pack")
+if(objs1[i].name=="coin_pack")
 {
 send_reliable(players1[x].peer_id,"A pack of coins!",2);
 players1[x].give("coin",random(20,80));
 }
-else if(objs[i].name=="remote_timebomb_controller")
+else if(objs1[i].name=="remote_timebomb_controller")
 {
 if(players1[x].get_item_count("remote_timebomb_controller")>0)
 {
@@ -72,7 +74,7 @@ send_reliable(players1[x].peer_id,"A remote timebomb controller!",2);
 players1[x].give("remote_timebomb_controller",1);
 }
 }
-else if(objs[i].name=="remote_gun_controller")
+else if(objs1[i].name=="remote_gun_controller")
 {
 if(players1[x].get_item_count("remote_gun_controller")>0)
 {
@@ -85,7 +87,7 @@ send_reliable(players1[x].peer_id,"a remote gun controller!",2);
 players1[x].give("remote_gun_controller",1);
 }
 }
-else if(objs[i].name=="gas_mask")
+else if(objs1[i].name=="gas_mask")
 {
 if(players1[x].get_item_count("gas_mask")>0)
 {
@@ -98,7 +100,7 @@ send_reliable(players1[x].peer_id,"A gas mask!",2);
 players1[x].give("gas_mask",1);
 }
 }
-else if(objs[i].name=="bike")
+else if(objs1[i].name=="bike")
 {
 string items=players1[x].get_inv();
 if(inv_item_number(items, "bike")>0)
@@ -112,32 +114,32 @@ send_reliable(players1[x].peer_id,"a bike!",2);
 players1[x].give("bike",1);
 }
 }
-else if(objs[i].name=="ammo")
+else if(objs1[i].name=="ammo")
 {
 int tmpint=random(15,50);
 string temp=get_guns_data()[random(0,get_guns_data().length()-1)].name;
 send_reliable(players1[x].peer_id,tmpint+" "+temp+" ammo!",2);
 players1[x].give("ammo_"+temp,tmpint);
 }
-else if(objs[i].name=="antibiotic_pack")
+else if(objs1[i].name=="antibiotic_pack")
 {
 players1[x].give("antibiotic",20);
 send_reliable(players1[x].peer_id,"play_s|gift.ogg",0);
 send_reliable(players1[x].peer_id,"an antibiotic pack!",2);
 }
-else if(objs[i].name=="mini_antibiotic_pack")
+else if(objs1[i].name=="mini_antibiotic_pack")
 {
 players1[x].give("antibiotic",5);
 send_reliable(players1[x].peer_id,"play_s|gift.ogg",0);
 send_reliable(players1[x].peer_id,"a mini antibiotic pack!",2);
 }
-else if(objs[i].name=="ultra_antibiotic_pack")
+else if(objs1[i].name=="ultra_antibiotic_pack")
 {
 players1[x].give("antibiotic",50);
 send_reliable(players1[x].peer_id,"play_s|gift.ogg",0);
 send_reliable(players1[x].peer_id,"an ultra antibiotic pack!",2);
 }
-else if(objs[i].name=="health_pack")
+else if(objs1[i].name=="health_pack")
 {
 if(players1[x].health<50000)
 {
@@ -152,7 +154,7 @@ send_reliable(players1[x].peer_id,"antibiotic",2);
 players1[x].give("antibiotic",1);
 }
 }
-else if(objs[i].name=="ultrabomb_locator")
+else if(objs1[i].name=="ultrabomb_locator")
 {
 if(players1[x].get_item_count("ultrabomb_locator")>0 and !objs[i].dropped)
 {

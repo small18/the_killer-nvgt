@@ -118,8 +118,8 @@ for (uint i2=0; i2<objs.length(); i2++)
 if (get_3d_distance(motion_bombs[i].x,motion_bombs[i].y,motion_bombs[i].z,objs[i2].x,objs[i2].y,objs[i2].z)<=20 and objs[i2].map==motion_bombs[i].map)
 {
 play("obj_break"+random(1,3),objs[i2].x,objs[i2].y,objs[i2].z,objs[i2].map);
-@objs[i2]=null;
 remove_obj(i2);
+i2--;
 }
 }
 for (uint i2=0; i2<remguns.length(); i2++)
@@ -136,8 +136,8 @@ for(uint v=0; v<vs.length (); v++)
 if(get_3d_distance(motion_bombs[i].x,motion_bombs[i].y,motion_bombs[i].z,vs[v].x,vs[v].y,vs[v].z)<=20&&vs[v].map==motion_bombs[i].map)
 vs[v].hit(random(2500,5000),motion_bombs[i].owner+"'s motion bomb");
 }
-@motion_bombs[i]=null;
 motion_bombs.remove_at(i);
+i--;
 }
 }
 }

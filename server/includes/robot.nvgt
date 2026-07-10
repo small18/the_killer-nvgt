@@ -274,9 +274,10 @@ void robotsloop ()
 					}
 				}
 			} // if.amount.
-				@robots[r]=null;
+//@robots[r]=null;
 				robots.remove_at(r);
 				if (maps[m].currobots>0) {maps[m].currobots-=1;}
+				r--;
 				return;
 			} // if.timer.
 		} // switch.state.
