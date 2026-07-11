@@ -19,8 +19,9 @@ for(uint i=0; i<tempbans.length(); i++)
 if(tempbans[i].tempbantimer.elapsed>tempbans[i].ms)
 {
 send_reliable(0,"notify|"+tempbans[i].username+"'s temp ban has expired!",0);
-@tempbans[i]=null;
+//@tempbans[i]=null;
 tempbans.remove_at(i);
+i--;
 continue;
 }
 }

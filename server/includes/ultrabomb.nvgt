@@ -121,6 +121,7 @@ if (get_3d_distance(ultrabombs[i].x,ultrabombs[i].y,ultrabombs[i].z,objs[i2].x,o
 {
 play("obj_break"+random(1,3),objs[i2].x,objs[i2].y,objs[i2].z,objs[i2].map);
 remove_obj(i2);
+i2--;
 }
 }
 for (uint i2=0; i2<remguns.length(); i2++)

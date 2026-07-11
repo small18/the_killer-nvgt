@@ -39,8 +39,9 @@ if(p.get_item_count("ammo_"+p.weapon)<get_max_ammo()) amount=p.get_item_count("a
 else amount=get_max_ammo();
 if(p.get_ammo_count(p.weapon)<amount)
 {
-p.give("ammo_"+p.weapon,-amount);
-p.ammo_give(p.weapon,amount);
+int ammot=amount-p.get_ammo_count(p.weapon);
+p.give("ammo_"+p.weapon,-ammot);
+p.ammo_give(p.weapon,ammot);
 }
 }
 }

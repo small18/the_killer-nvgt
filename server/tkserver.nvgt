@@ -2994,7 +2994,9 @@ if(!get_wdata_value(players[index].weapon,"requires_ammo")||!wdata_value_exists(
 send_reliable(players[index].peer_id,"This weapon does not take ammo",0);
 return;
 }
-if(players[index].get_ammo_count_from(players[index].weapon)>0)
+var@ mammo = get_wdata_value(players[index].weapon,"max_ammo");
+int amcount = mammo==null? 0:mammo;
+if(players[index].get_ammo_count_from(players[index].weapon) >=amcount)
 {
 return;
 }

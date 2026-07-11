@@ -29,6 +29,7 @@ if (timeitems[i].stimer.elapsed>=timeitems[i].spawntime)
 spawn_obj(timeitems[i].x,timeitems[i].y,timeitems[i].z,timeitems[i].map,timeitems[i].itemtype,timeitems[i].amount,timeitems[i].should_drop);
 //@timeitems[i]=null;
 timeitems.remove_at(i);
+i--;
 continue;
 }
 }

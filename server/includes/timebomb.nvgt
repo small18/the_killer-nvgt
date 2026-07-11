@@ -44,8 +44,9 @@ spawn_fire(timebombs[i].x,timebombs[i].y,timebombs[i].z,timebombs[i].map,random(
 send_reliable(0,"distsound|timebombexplodedist|"+timebombs[i].x+"|"+timebombs[i].y+"|"+timebombs[i].z+"|"+timebombs[i].map,0);
 spawn_weapon(timebombs[i].x, timebombs[i].y, timebombs[i].z, 0, "timebomb",timebombs[i].map,players[index]);
 }
-@timebombs[i]=null;
+//@timebombs[i]=null;
 timebombs.remove_at(i);
+i--;
 }
 }
 }
