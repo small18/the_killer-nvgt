@@ -4965,7 +4965,7 @@ move_player(players[index],m,0,0,0,(players[index].hidden==0));
 }
 else if(parsed[0]=="/newmap" and parsed.length()>5)
 {
-if(players[index].is_master() or beta)
+if(players[index].adminable())
 {
 string mapname=parsed[1];
 if(map_exists(mapname))
