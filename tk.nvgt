@@ -2,19 +2,19 @@
 void main()
 {
 @tts_default_text_processing_callback = translation_callback;
-tp.behind_pitch_decrease = 5;
-p.behind_pitch_decrease = 5;
+//tp.behind_pitch_decrease = 5;
+//p.behind_pitch_decrease = 5;
 distpool.max_distance = 300;
-distpool.behind_pitch_decrease = -5;
+//distpool.behind_pitch_decrease = -5;
 distpool.pan_step = 0.2;
-mpool.behind_pitch_decrease = 5;
-objpool.behind_pitch_decrease = 5;
+//mpool.behind_pitch_decrease = 5;
+//objpool.behind_pitch_decrease = 5;
 sourcepool.hrtf = false;
 distpool.hrtf = false;
 distpool.volume_step = 0.05;
 trackpool.max_distance = 1000;
 trackpool.volume_step = -1;
-trackpool.behind_pitch_decrease = 5;
+//trackpool.behind_pitch_decrease = 5;
 set_sound_storage("sounds.dat","tyuisfgbnmvhxzguyeavbnz");
 
 //set_sound_storage("sounds.dat");
