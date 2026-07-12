@@ -40,6 +40,7 @@ weapons[j].x=wr.x;
 weapons[j].y=wr.y;
 int rx=round(weapons[j].x, 0);
 int ry=round(weapons[j].y, 0);
+weapons[j].distance++;
 if(weapons[j].distance > weapons[j].type.range or string_left(get_tile_at(rx,ry,weapons[j].z,weapons[j].map),4)=="wall" or rx>weapons[j].maxcoords.x or ry>weapons[j].maxcoords.y or rx<0 or ry<0)
 {
 if(weapons[j].type.bullet)
@@ -111,7 +112,6 @@ weapons.remove_at(j);
 j--;
 continue;
 }
-weapons[j].distance++;
 }
 bool hit=false;
 string sendtext="";
