@@ -216,6 +216,10 @@ bool robot_follow_path (Robot@ r)
 		robot_clear_path(r);
 		return(false);
 	} // if.cost.
+	if (r.steps!=1 and !robot_can_climb_between(round(r.x,0),round(r.y,0),round(r.z,0),nx,ny,nz,r.map)) {
+		robot_clear_path(r);
+		return(false);
+	} // if.climb.
 	r.look=calculate_x_y_angle(r.x,r.y,nx,ny,0);
 	r.x=nx;
 	r.y=ny;
@@ -287,11 +291,11 @@ void robotsloop ()
 				for (c=0; c<p; c++) {
 					if (robots[r].map!=players[c].map or players[c].invinsible or players[c].frequency or players[c].newb==1) {continue;}
 					angle=calculate_x_y_angle(robots[r].x,robots[r].y,players[c].x,players[c].y,robots[r].look);
-					dist=get_2d_distance(robots[r].x,robots[r].y,players[c].x,players[c].y);
+					dist=get_3d_distance(robots[r].x,robots[r].y,robots[r].z,players[c].x,players[c].y,players[c].z);
 					if (robots[r].steps==1 and robots[r].z!=players[c].z) {robots[r].z+=sign(players[c].z,robots[r].z);
 					}else if (dist<=2 and robots[r].z<players[c].z) {
 						int type=get_tile_type(robots[r].x,robots[r].y,robots[r].z+1,robots[r].map);
-						if (robots[r].steps==0 and type==TILE_TILE) {robots[r].z+=1;}
+						if (robots[r].steps==0 and type==TILE_TILE and robot_can_climb_between(robots[r].x,robots[r].y,robots[r].z,robots[r].x,robots[r].y,robots[r].z+1,robots[r].map)) {robots[r].z+=1;}
 						if (robots[r].steps==0) {play(get_tile_at(robots[r].x,robots[r].y,robots[r].z,robots[r].map)+"step"+random(1,5),robots[r].x,robots[r].y,robots[r].z,robots[r].map);}
 						else if (robots[r].steps>1) {play(robots[r].name+"_step"+random(1,robots[r].steps),robots[r].x,robots[r].y,robots[r].z,robots[r].map);}
 						break;
@@ -303,7 +307,7 @@ void robotsloop ()
 							robots[r].up=robots[r].z;
 						} // if.down.
 						break;
-					}else if (dist<=robots[r].aggro and absolute(robots[r].z-players[c].z)<=robots[r].aggro) {
+					}else if (dist<=robots[r].aggro) {
 						if (robot_path_needs_update(robots[r],players[c])) {robot_update_path(robots[r],players[c]);}
 						if (robot_follow_path(robots[r])) {
 							if (robots[r].steps==0) {play(get_tile_at(robots[r].x,robots[r].y,robots[r].z,robots[r].map)+"step"+random(1,5),robots[r].x,robots[r].y,robots[r].z,robots[r].map);}

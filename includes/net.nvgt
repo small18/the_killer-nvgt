@@ -1,5 +1,5 @@
-string netaddress="127.0.0.1";
-//string netaddress="pro.xztom.com";
+//string netaddress="127.0.0.1";
+string netaddress="pro.xztom.com";
 uint64 netport = 10000;
 
 void login ()

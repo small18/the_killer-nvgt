@@ -38,6 +38,25 @@ int robot_tile_cost (int x, int y, int z, string mapname, bool ignore_ground=fal
 	return(1);
 } // func.robot_tile_cost.
 
+bool robot_is_climbable_tile (int x, int y, int z, string mapname)
+{
+	string tile=get_tile_at(x,y,z,mapname);
+	if (tile=="") {return(false);}
+	tile=string_to_lower_case(tile);
+	if (string_contains(tile,"stair",1)>-1) {return(true);}
+	if (string_contains(tile,"ladder",1)>-1) {return(true);}
+	return(is_staircase(x,y,z,mapname));
+} // func.robot_is_climbable_tile.
+
+bool robot_can_climb_between (int x1, int y1, int z1, int x2, int y2, int z2, string mapname)
+{
+	if (z1==z2) {return(true);}
+	if (absolute(z1-z2)>1) {return(false);}
+	if (robot_is_climbable_tile(x1,y1,z1,mapname)) {return(true);}
+	if (robot_is_climbable_tile(x2,y2,z2,mapname)) {return(true);}
+	return(false);
+} // func.robot_can_climb_between.
+
 bool prepare_robot_path (string mapname, bool ignore_ground=false)
 {
 	if (mapname=="") {return(false);}
@@ -63,6 +82,20 @@ int robot_path_cost (int x, int y, int z, any@ data=null)
 	return(1);
 } // func.robot_path_cost.
 
+int robot_path_cost_ex (int x, int y, int z, int parent_x, int parent_y, int parent_z, any@ data=null)
+{
+	if (x<0 or y<0 or z<0) {return(10);}
+	if (x>robot_path_max_x or y>robot_path_max_y or z>robot_path_max_z) {return(10);}
+	int type=get_tile_type(x,y,z,robot_path_map);
+	if (type==TILE_WALL) {return(10);}
+	if (robot_path_ignore_ground) {return(1);}
+	if (type==TILE_NONE) {return(10);}
+	if (!robot_can_climb_between(parent_x,parent_y,parent_z,x,y,z,robot_path_map)) {return(10);}
+	if (is_tile_water(x,y,z,robot_path_map)) {return(4);}
+	if (robot_is_climbable_tile(x,y,z,robot_path_map)) {return(2);}
+	return(1);
+} // func.robot_path_cost_ex.
+
 vector[]@ find_robot_path (int sx, int sy, int sz, int tx, int ty, int tz, string mapname, bool ignore_ground=false, int search_range=80)
 {
 	vector[] empty;
@@ -71,11 +104,11 @@ vector[]@ find_robot_path (int sx, int sy, int sz, int tx, int ty, int tz, strin
 	if (sx>robot_path_max_x or sy>robot_path_max_y or sz>robot_path_max_z) {return(@empty);}
 	if (tx>robot_path_max_x or ty>robot_path_max_y or tz>robot_path_max_z) {return(@empty);}
 	if (robot_path_cost(sx,sy,sz)>9 or robot_path_cost(tx,ty,tz)>9) {return(@empty);}
-	pathfinder pf;
+	pathfinder pf(1024,false);
 	pf.allow_diagonals=false;
 	pf.automatic_reset=true;
 	pf.search_range=search_range;
-	pf.set_callback_function(robot_path_cost);
+	pf.set_callback_function(robot_path_cost_ex);
 	vector[]@ path=pf.find(sx,sy,sz,tx,ty,tz,"");
 	if (@path==null) {return(@empty);}
 	return(path);
