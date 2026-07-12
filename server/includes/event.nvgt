@@ -222,8 +222,8 @@ for(uint i=0; i<events.length(); i++)
 {
 if(events[i].ended==true)
 {
-@events[i]=null;
 events.remove_at(i);
+i--;
 continue;
 }
 }

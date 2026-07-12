@@ -179,6 +179,7 @@ send_reliable(0,"playerdeath|"+killmsg(remguns[j].owner+"'s remote gun "+remguns
 int index=get_player_index_from(remguns[j].owner);
 if(index>-1) send_reliable(players[index].peer_id,"play_s|remgun_disconnect.ogg",0);
 remguns.remove_at(j);
+j--;
 continue;
 }
 if(remguns[j].usetimer.elapsed>=remguns[j].usetime and remguns[j].can_fire==true)
@@ -229,7 +230,11 @@ if(tremguns.length () >0)
 {
 for(uint i=0; i<tremguns.length (); i++)
 {
-if(tremguns[i].placetime.elapsed>=6343) tremguns.remove_at(i);
+if(tremguns[i].placetime.elapsed>=6343)
+{
+tremguns.remove_at(i);
+i--;
+}
 }
 }
 }

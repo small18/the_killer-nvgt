@@ -85,6 +85,8 @@ string inv;
 bool invchanged=false;
 timer posetimer;
 timer objtimer;
+timer audio_listener_update_timer;
+int audio_refresh_rate = 60;
 bool global_hrtf = true;
 bool in_game = false;
 bool in_game1=false;

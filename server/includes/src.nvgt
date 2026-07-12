@@ -35,7 +35,6 @@ for(uint i=0; i<sources.length(); i++)
 if(sources[i].delete==true)
 {
 send_reliable(0, "delsource|"+sources[i].id, 0);
-//@sources[i]=null;
 sources.remove_at(i);
 i--;
 continue;

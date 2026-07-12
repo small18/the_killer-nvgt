@@ -75,6 +75,7 @@ if(sirens[i].id==id)
 {
 send_reliable(0,"destroysiren|"+id,4);
 sirens.remove_at(i);
+i--;
 continue;
 }
 }

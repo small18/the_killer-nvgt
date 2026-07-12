@@ -10,6 +10,7 @@
 #include "logger.nvgt"
 #include "dateandtime.nvgt"
 #include "map.nvgt"
+#include "robot_pathfinding.nvgt"
 #include "moving_sound_serverside_handler.nvgt"
 #include "vehicle.nvgt"
 #include "bodyfall.nvgt"
@@ -74,3 +75,4 @@
 #include "helicopter.nvgt"
 #include "robot.nvgt"
 #include "weapon_data.nvgt"
+#include "robocop.nvgt"

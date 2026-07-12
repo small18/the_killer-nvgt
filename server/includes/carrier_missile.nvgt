@@ -98,6 +98,7 @@ destroy_moving_sound(carrier_missiles[i].mid);
 spawn_obj(carrier_missiles[i].x,carrier_missiles[i].y,carrier_missiles[i].z,carrier_missiles[i].map,"carrier_missile",1,false);
 if(carrier_missiles[i].sendback==false) spawn_obj(carrier_missiles[i].x,carrier_missiles[i].y,carrier_missiles[i].z,carrier_missiles[i].map,carrier_missiles[i].item,carrier_missiles[i].item_amount);
 carrier_missiles.remove_at(i);
+i--;
 continue;
 }
 if(carrier_missiles[i].intercepted==false)
@@ -130,6 +131,7 @@ destroy_moving_sound(carrier_missiles[i].mid);
 carrier_missiles[i].owner.give("carrier_missile",1);
 send_reliable(carrier_missiles[i].owner.peer_id,"your carrier missile has returned",2);
 carrier_missiles.remove_at(i);
+i--;
 continue;
 }
 }
@@ -143,6 +145,7 @@ if(carrier_missiles[i].owner.map!=carrier_missiles[i].map)
 destroy_moving_sound(carrier_missiles[i].mid);
 spawn_obj(carrier_missiles[i].x,carrier_missiles[i].y,0,carrier_missiles[i].map,"carrier_missile",1,false);
 carrier_missiles.remove_at(i);
+i--;
 continue;
 }
 if(carrier_missiles[i].owner.x!=carrier_missiles[i].targetx) carrier_missiles[i].targetx=carrier_missiles[i].owner.x;
@@ -170,6 +173,7 @@ carrier_missiles[i].intercepttimer.restart();
 spawn_obj(carrier_missiles[i].x,carrier_missiles[i].y,carrier_missiles[i].z,carrier_missiles[i].map,"carrier_missile",1,false);
 if(carrier_missiles[i].sendback==false) spawn_obj(carrier_missiles[i].x,carrier_missiles[i].y,carrier_missiles[i].z,carrier_missiles[i].map,carrier_missiles[i].item,carrier_missiles[i].item_amount);
 carrier_missiles.remove_at(i);
+i--;
 continue;
 }
 }

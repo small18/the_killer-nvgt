@@ -1,0 +1,200 @@
+class RobotPathRequest
+{
+	uint robot_id;
+	string map,target_player;
+	int sx,sy,sz,tx,ty,tz,search_range;
+	bool ignore_ground;
+} // class.RobotPathRequest.
+
+class RobotPathResult
+{
+	uint robot_id;
+	string target_player;
+	int tx,ty,tz;
+	string path_data;
+} // class.RobotPathResult.
+
+string robot_path_map;
+int robot_path_max_x,robot_path_max_y,robot_path_max_z;
+bool robot_path_ignore_ground;
+fast_mutex robot_path_queue_mutex;
+RobotPathRequest@[] robot_path_requests;
+RobotPathResult@[] robot_path_results;
+async<void>@ robot_path_worker;
+int robot_path_worker_started=0;
+int robot_path_worker_stopping=0;
+
+int robot_tile_cost (int x, int y, int z, string mapname, bool ignore_ground=false)
+{
+	vector max=get_max_values(mapname);
+	if (mapname=="" or x<0 or y<0 or z<0) {return(10);}
+	if (x>round(max.x,0) or y>round(max.y,0) or z>round(max.z,0)) {return(10);}
+	int type=get_tile_type(x,y,z,mapname);
+	if (type==TILE_WALL) {return(10);}
+	if (ignore_ground) {return(1);}
+	if (type==TILE_NONE) {return(10);}
+	if (is_tile_water(x,y,z,mapname)) {return(4);}
+	if (is_staircase(x,y,z,mapname)) {return(2);}
+	return(1);
+} // func.robot_tile_cost.
+
+bool prepare_robot_path (string mapname, bool ignore_ground=false)
+{
+	if (mapname=="") {return(false);}
+	vector max=get_max_values(mapname);
+	robot_path_map=mapname;
+	robot_path_max_x=round(max.x,0);
+	robot_path_max_y=round(max.y,0);
+	robot_path_max_z=round(max.z,0);
+	robot_path_ignore_ground=ignore_ground;
+	return(true);
+} // func.prepare_robot_path.
+
+int robot_path_cost (int x, int y, int z, any@ data=null)
+{
+	if (x<0 or y<0 or z<0) {return(10);}
+	if (x>robot_path_max_x or y>robot_path_max_y or z>robot_path_max_z) {return(10);}
+	int type=get_tile_type(x,y,z,robot_path_map);
+	if (type==TILE_WALL) {return(10);}
+	if (robot_path_ignore_ground) {return(1);}
+	if (type==TILE_NONE) {return(10);}
+	if (is_tile_water(x,y,z,robot_path_map)) {return(4);}
+	if (is_staircase(x,y,z,robot_path_map)) {return(2);}
+	return(1);
+} // func.robot_path_cost.
+
+vector[]@ find_robot_path (int sx, int sy, int sz, int tx, int ty, int tz, string mapname, bool ignore_ground=false, int search_range=80)
+{
+	vector[] empty;
+	if (!prepare_robot_path(mapname,ignore_ground)) {return(@empty);}
+	if (sx<0 or sy<0 or sz<0 or tx<0 or ty<0 or tz<0) {return(@empty);}
+	if (sx>robot_path_max_x or sy>robot_path_max_y or sz>robot_path_max_z) {return(@empty);}
+	if (tx>robot_path_max_x or ty>robot_path_max_y or tz>robot_path_max_z) {return(@empty);}
+	if (robot_path_cost(sx,sy,sz)>9 or robot_path_cost(tx,ty,tz)>9) {return(@empty);}
+	pathfinder pf;
+	pf.allow_diagonals=false;
+	pf.automatic_reset=true;
+	pf.search_range=search_range;
+	pf.set_callback_function(robot_path_cost);
+	vector[]@ path=pf.find(sx,sy,sz,tx,ty,tz,"");
+	if (@path==null) {return(@empty);}
+	return(path);
+} // func.find_robot_path.
+
+string robot_pack_path (vector[]@ path)
+{
+	if (@path==null) {return("");}
+	string data;
+	for (uint i=0; i<path.length(); i++) {
+		if (i>0) {data+=";";}
+		data+=round(path[i].x,0)+","+round(path[i].y,0)+","+round(path[i].z,0);
+	} // for.path.
+	return(data);
+} // func.robot_pack_path.
+
+vector[]@ robot_unpack_path (string data)
+{
+	vector[] path;
+	if (data=="") {return(@path);}
+	string[] nodes=string_split(data,";",true);
+	for (uint i=0; i<nodes.length(); i++) {
+		string[] pos=string_split(nodes[i],",",true);
+		if (pos.length()<3) {continue;}
+		vector node;
+		node.x=stn(pos[0]);
+		node.y=stn(pos[1]);
+		node.z=stn(pos[2]);
+		path.insert_last(node);
+	} // for.nodes.
+	return(@path);
+} // func.robot_unpack_path.
+
+void robot_queue_path_request (uint robot_id, int sx, int sy, int sz, int tx, int ty, int tz, string mapname, string target_player, bool ignore_ground=false, int search_range=80)
+{
+	RobotPathRequest@ req=RobotPathRequest();
+	req.robot_id=robot_id;
+	req.sx=sx; req.sy=sy; req.sz=sz;
+	req.tx=tx; req.ty=ty; req.tz=tz;
+	req.map=mapname;
+	req.target_player=target_player;
+	req.ignore_ground=ignore_ground;
+	req.search_range=search_range;
+	robot_path_queue_mutex.lock();
+	for (int i=robot_path_requests.length()-1; i>=0; i--) {
+		if (robot_path_requests[i].robot_id==robot_id) {robot_path_requests.remove_at(i);}
+	} // for.requests.
+	for (int i=robot_path_results.length()-1; i>=0; i--) {
+		if (robot_path_results[i].robot_id==robot_id) {robot_path_results.remove_at(i);}
+	} // for.results.
+	robot_path_requests.insert_last(req);
+	if (robot_path_requests.length()>200) {robot_path_requests.remove_at(0);}
+	robot_path_queue_mutex.unlock();
+} // func.robot_queue_path_request.
+
+string robot_take_path_result_data (uint robot_id, string target_player, int tx, int ty, int tz)
+{
+	string data="#waiting";
+	robot_path_queue_mutex.lock();
+	for (int i=robot_path_results.length()-1; i>=0; i--) {
+		if (robot_path_results[i].robot_id==robot_id) {
+			if (robot_path_results[i].target_player==target_player and robot_path_results[i].tx==tx and robot_path_results[i].ty==ty and robot_path_results[i].tz==tz) {
+				data=robot_path_results[i].path_data;
+			} // if.match.
+			robot_path_results.remove_at(i);
+			break;
+		} // if.robot.
+	} // for.results.
+	robot_path_queue_mutex.unlock();
+	return(data);
+} // func.robot_take_path_result_data.
+
+void robot_path_worker_loop ()
+{
+	while (robot_path_worker_stopping==0) {
+		RobotPathRequest@ req=null;
+		robot_path_queue_mutex.lock();
+		if (robot_path_requests.length()>0) {
+			@req=robot_path_requests[0];
+			robot_path_requests.remove_at(0);
+		} // if.requests.
+		robot_path_queue_mutex.unlock();
+		if (@req==null) {
+			wait(10);
+			continue;
+		} // if.empty.
+		vector[]@ path=find_robot_path(req.sx,req.sy,req.sz,req.tx,req.ty,req.tz,req.map,req.ignore_ground,req.search_range);
+		RobotPathResult@ result=RobotPathResult();
+		result.robot_id=req.robot_id;
+		result.target_player=req.target_player;
+		result.tx=req.tx; result.ty=req.ty; result.tz=req.tz;
+		result.path_data=robot_pack_path(path);
+		robot_path_queue_mutex.lock();
+		for (int i=robot_path_results.length()-1; i>=0; i--) {
+			if (robot_path_results[i].robot_id==result.robot_id) {robot_path_results.remove_at(i);}
+		} // for.results.
+		robot_path_results.insert_last(result);
+		if (robot_path_results.length()>200) {robot_path_results.remove_at(0);}
+		robot_path_queue_mutex.unlock();
+		wait(1);
+	} // while.
+} // func.robot_path_worker_loop.
+
+void start_robot_path_worker ()
+{
+	if (robot_path_worker_started==1) {return;}
+	robot_path_worker_started=1;
+	robot_path_worker_stopping=0;
+	@robot_path_worker=async<void>(robot_path_worker_loop);
+} // func.start_robot_path_worker.
+
+void stop_robot_path_worker ()
+{
+	if (robot_path_worker_started==0) {return;}
+	robot_path_worker_stopping=1;
+	if (@robot_path_worker!=null) {robot_path_worker.try_wait(500);}
+	robot_path_queue_mutex.lock();
+	robot_path_requests.resize(0);
+	robot_path_results.resize(0);
+	robot_path_queue_mutex.unlock();
+	robot_path_worker_started=0;
+} // func.stop_robot_path_worker.

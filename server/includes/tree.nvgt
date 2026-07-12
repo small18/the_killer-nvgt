@@ -29,8 +29,8 @@ if(trees[i].killed==true)
 {
 play("treecrash",trees[i].x,trees[i].y,trees[i].z,trees[i].map);
 send_reliable(0,"killtree "+trees[i].id,0);
-@trees[i]=null;
 trees.remove_at(i);
+i--;
 continue;
 }
 }

@@ -22,7 +22,7 @@ if(profiler) start_profiling();
 @t_net_loop = async<int> (net_loop);
 while (loop)
 {
-wait (1);
+wait (5);
 t_net_loop_mutex.lock();
 tk_loop();
 if (dead)

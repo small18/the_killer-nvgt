@@ -86,6 +86,7 @@ if(msounds[i].id==id)
 {
 send_reliable(0,"destroymsound|"+id,4);
 msounds.remove_at(i);
+i--;
 continue;
 }
 }
@@ -158,6 +159,7 @@ for(uint i=0; i<ams.length(); i++)
 if(ams[i].dead)
 {
 ams.remove_at(i);
+i--;
 continue;
 }
 ams[i].move();

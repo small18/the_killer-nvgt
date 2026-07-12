@@ -95,6 +95,7 @@ impact_bombs[x].health=-1;
 }
 }
 impact_bombs.remove_at(i);
+i--;
 }
 }
 }

@@ -116,8 +116,8 @@ play("ibombhit"+random(1,3),impact_bombs[x].x,impact_bombs[x].y,impact_bombs[x].
 impact_bombs[x].health-=random(rockets[j].mindammage,rockets[j].maxdammage);
 }
 }
-@rockets[j]=null;
 rockets.remove_at(j);
+j--;
 continue;
 }
 }

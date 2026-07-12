@@ -487,7 +487,6 @@ for(uint i=0; i<vs.length (); i++)
 if(vs[i].remove)
 {
 if(vs[i].mid!="") destroy_moving_sound(vs[i].mid);
-@vs[i]=null;
 vs.remove_at(i);
 return;
 }

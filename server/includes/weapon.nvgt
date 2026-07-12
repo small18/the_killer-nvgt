@@ -28,6 +28,7 @@ for(uint j=0; j<weapons.length(); j++)
 if(@weapons[j].type==null)
 {
 weapons.remove_at(j);
+j--;
 continue;
 }
 if(weapons[j].speed_timer.elapsed>=weapons[j].type.speed_time)
@@ -44,71 +45,71 @@ if(weapons[j].distance > weapons[j].type.range or string_left(get_tile_at(rx,ry,
 if(weapons[j].type.bullet)
 {
 play("rico"+random(1, 5), rx, ry, weapons[j].z, weapons[j].map);
-@weapons[j]=null;
 weapons.remove_at(j);
-break;
+j--;
+continue;
 }
 else if(weapons[j].type.name=="stun_dart" or weapons[j].type.name=="health_dart" or weapons[j].type.name=="poison_dart")
 {
 play("stun_dartdrop",weapons[j].x,weapons[j].y,weapons[j].z,weapons[j].map);
-@weapons[j]=null;
 weapons.remove_at(j);
-break;
+j--;
+continue;
 }
 else if(weapons[j].type.name=="sticky_bomb")
 {
 spawn_stickybomb(rx,ry,weapons[j].z,weapons[j].dir,weapons[j].map,weapons[j].p.name,"");
-@weapons[j]=null;
 weapons.remove_at(j);
-break;
+j--;
+continue;
 }
 else if(weapons[j].type.name=="grenade")
 {
 spawn_grenade(rx,ry,weapons[j].z,weapons[j].dir,weapons[j].map,weapons[j].p.name);
-@weapons[j]=null;
 weapons.remove_at(j);
-break;
+j--;
+continue;
 }
 else if(weapons[j].type.name=="m79_grenade_launcher")
 {
 spawn_grenade(rx,ry,weapons[j].z,weapons[j].dir,weapons[j].map,weapons[j].p.name);
-@weapons[j]=null;
 weapons.remove_at(j);
-break;
+j--;
+continue;
 }
 else if(weapons[j].type.name=="rocket_launcher")
 {
 spawn_rocket(rx,ry,weapons[j].z,weapons[j].dir,weapons[j].map,weapons[j].p.name);
-@weapons[j]=null;
 weapons.remove_at(j);
-break;
+j--;
+continue;
 }
 else if(weapons[j].type.name=="rpg7")
 {
 spawn_rpg(rx,ry,weapons[j].z,weapons[j].dir,weapons[j].map,weapons[j].p.name);
-@weapons[j]=null;
 weapons.remove_at(j);
-break;
+j--;
+continue;
 }
 else if(weapons[j].type.name=="gp30")
 {
 spawn_gp(rx,ry,weapons[j].z,weapons[j].dir,weapons[j].map,weapons[j].p.name);
-@weapons[j]=null;
 weapons.remove_at(j);
-break;
+j--;
+continue;
 }
 else if(weapons[j].type.name=="ags30")
 {
 spawn_ags(rx,ry,weapons[j].z,weapons[j].dir,weapons[j].map,weapons[j].p.name);
-@weapons[j]=null;
 weapons.remove_at(j);
-break;
+j--;
+continue;
 }
 else
 {
-@weapons[j]=null;
 weapons.remove_at(j);
-break;
+j--;
+continue;
 }
 weapons[j].distance++;
 }
@@ -135,7 +136,6 @@ else if(weapons[j].type=="gp30")
 spawn_gp(rx,ry,weapons[j].z,weapons[j].dir,weapons[j].map,weapons[j].p.name);
 else if(weapons[j].type=="ags30")
 spawn_ags(rx,ry,weapons[j].z,weapons[j].dir,weapons[j].map,weapons[j].p.name);
-@weapons[j]=null;
 weapons.remove_at(j);
 continue;
 }
@@ -555,9 +555,10 @@ if(weapons[j].type.name=="artillery") send_reliable(weapons[j].p.peer_id,"hit "+
 hit=true;
 }
 }
-if(hit) { @weapons[j]=null;
+if(hit) {
  weapons.remove_at(j);
- break;
+ j--;
+ continue;
 }
 }
 }

@@ -120,6 +120,7 @@ if(get_3d_distance(mines[i].x,mines[i].y,mines[i].z,vs[v].x,vs[v].y,vs[v].z)<=10
 vs[v].hit(random(2000,5000),mines[i].owner+"'s mine");
 }
 mines.remove_at(i);
+i--;
 continue;
 }
 }

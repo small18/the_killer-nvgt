@@ -28,6 +28,10 @@ class Robot : RobotTemplate // Class robot.
 	string ll,loop; // Robot location.
 	string[] loots;
 	timer movetimer,shoottimer,looptimer,voicetimer; // Timers moving, shooting.
+	vector[]@ path;
+	int path_index,path_target_x,path_target_y,path_target_z,path_search_range,path_waiting;
+	string path_target_player;
+	timer pathtimer;
 
 Robot ()
 	{
@@ -44,6 +48,9 @@ Robot ()
 		this.loots=string_split(this.loot,",",true);
 		this.voice="";
 		this.loop="";
+		@this.path=null; this.path_index=0;
+		this.path_target_x=-1; this.path_target_y=-1; this.path_target_z=-1;
+		this.path_search_range=0; this.path_target_player=""; this.path_waiting=0;
 	} // constructor.
 
 Robot (RobotTemplate@ tr, int index, double x, double y, double z, string map)
@@ -67,6 +74,9 @@ Robot (RobotTemplate@ tr, int index, double x, double y, double z, string map)
 		else {this.voice=spawn_moving_sound(this.name+"_voice.ogg",this.x,this.y,this.z,this.map);}
 		if (this.loops>1) {this.loop=spawn_moving_sound(this.name+"_loop"+random(1,this.loops)+".ogg",this.x,this.y,this.z,this.map);}
 		else {this.loop=spawn_moving_sound(this.name+"_loop.ogg",this.x,this.y,this.z,this.map);}
+		@this.path=null; this.path_index=0;
+		this.path_target_x=-1; this.path_target_y=-1; this.path_target_z=-1;
+		this.path_search_range=0; this.path_target_player=""; this.path_waiting=0;
 	} // constructor.params.
 
 void update ()
@@ -136,9 +146,83 @@ bool robot_move (Robot@ r, int m)
 	double rx=r.x+sine(r.look*pi/180);
 	double ry=r.y+cosine(r.look*pi/180);
 	if (m<0 or (rx==r.x or ry==r.y) or (rx<0 or rx>maps[m].max.x) or (ry<0 or ry>maps[m].max.y)) {return(false);}
+	if (robot_tile_cost(round(rx,0),round(ry,0),round(r.z,0),r.map,r.steps==1)>9) {return(false);}
 	r.x=rx; r.y=ry;
 	return(true);
 } // robot_move.
+
+void robot_clear_path (Robot@ r)
+{
+	@r.path=null;
+	r.path_index=0;
+	r.path_target_x=-1;
+	r.path_target_y=-1;
+	r.path_target_z=-1;
+	r.path_search_range=0;
+	r.path_target_player="";
+	r.path_waiting=0;
+} // func.robot_clear_path.
+
+int robot_path_search_range (Robot@ r)
+{
+	int range=r.aggro+10;
+	if (range<30) {range=30;}
+	if (range>120) {range=120;}
+	return(range);
+} // func.robot_path_search_range.
+
+bool robot_path_needs_update (Robot@ r, player@ p)
+{
+	int tx=round(p.x,0),ty=round(p.y,0),tz=round(p.z,0);
+	if (@r.path==null) {return(r.path_waiting==0 or r.pathtimer.elapsed>=1500);}
+	if (r.path_index>=r.path.length()) {return(true);}
+	if (r.path_target_player!=p.name) {return(true);}
+	if (r.path_target_x!=tx or r.path_target_y!=ty or r.path_target_z!=tz) {return(r.pathtimer.elapsed>=1000);}
+	if (r.path_search_range!=robot_path_search_range(r)) {return(true);}
+	return(r.pathtimer.elapsed>=3000);
+} // func.robot_path_needs_update.
+
+bool robot_update_path (Robot@ r, player@ p)
+{
+	int sx=round(r.x,0),sy=round(r.y,0),sz=round(r.z,0);
+	int tx=round(p.x,0),ty=round(p.y,0),tz=round(p.z,0);
+	int search_range=robot_path_search_range(r);
+	string path_data=robot_take_path_result_data(r.id,p.name,tx,ty,tz);
+	if (path_data!="#waiting") {
+		vector[]@ path=robot_unpack_path(path_data);
+		@r.path=path;
+		r.path_index=0;
+		r.path_waiting=0;
+		return(@r.path!=null and r.path.length()>0);
+	} // if.result.
+	if (r.path_waiting==1 and r.pathtimer.elapsed<1500) {return(false);}
+	robot_queue_path_request(r.id,sx,sy,sz,tx,ty,tz,r.map,p.name,r.steps==1,search_range);
+	r.pathtimer.restart();
+	r.path_target_x=tx;
+	r.path_target_y=ty;
+	r.path_target_z=tz;
+	r.path_target_player=p.name;
+	r.path_search_range=search_range;
+	r.path_waiting=1;
+	return(false);
+} // func.robot_update_path.
+
+bool robot_follow_path (Robot@ r)
+{
+	if (@r.path==null or r.path_index>=r.path.length()) {return(false);}
+	vector next=r.path[r.path_index];
+	int nx=round(next.x,0),ny=round(next.y,0),nz=round(next.z,0);
+	if (robot_tile_cost(nx,ny,nz,r.map,r.steps==1)>9) {
+		robot_clear_path(r);
+		return(false);
+	} // if.cost.
+	r.look=calculate_x_y_angle(r.x,r.y,nx,ny,0);
+	r.x=nx;
+	r.y=ny;
+	r.z=nz;
+	r.path_index+=1;
+	return(true);
+} // func.robot_follow_path.
 
 void robotsloop ()
 {
@@ -220,6 +304,12 @@ void robotsloop ()
 						} // if.down.
 						break;
 					}else if (dist<=robots[r].aggro and absolute(robots[r].z-players[c].z)<=robots[r].aggro) {
+						if (robot_path_needs_update(robots[r],players[c])) {robot_update_path(robots[r],players[c]);}
+						if (robot_follow_path(robots[r])) {
+							if (robots[r].steps==0) {play(get_tile_at(robots[r].x,robots[r].y,robots[r].z,robots[r].map)+"step"+random(1,5),robots[r].x,robots[r].y,robots[r].z,robots[r].map);}
+							else if (robots[r].steps>1) {play(robots[r].name+"_step"+random(1,robots[r].steps),robots[r].x,robots[r].y,robots[r].z,robots[r].map);}
+							break;
+						} // if.robot_follow_path.
 						if (angle<=robots[r].angle or angle>=robots[r].reangle) {
 							if (robot_move(robots[r],m)) {
 								if (robots[r].steps==0) {play(get_tile_at(robots[r].x,robots[r].y,robots[r].z,robots[r].map)+"step"+random(1,5),robots[r].x,robots[r].y,robots[r].z,robots[r].map);}
@@ -274,7 +364,6 @@ void robotsloop ()
 					}
 				}
 			} // if.amount.
-//@robots[r]=null;
 				robots.remove_at(r);
 				if (maps[m].currobots>0) {maps[m].currobots-=1;}
 				r--;

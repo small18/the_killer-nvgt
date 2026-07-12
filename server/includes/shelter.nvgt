@@ -680,6 +680,7 @@ destroy_moving_sound(shelters[i].soundloop);
 file_delete("shelters/"+shelters[i].sheltername+".shelter");
 remove_map(shelters[i].sheltername);
 shelters.remove_at(i);
+i--;
 }
 }
 }

@@ -133,7 +133,11 @@ if(content=="") return false;
 string[] peramitors=string_split(content, "\r\n", false);
 for(uint i=0; i<peramitors.length(); i++)
 {
-if(string_left(peramitors[i],1)==";") peramitors.remove_at(i);
+if(string_left(peramitors[i],1)==";")
+{
+peramitors.remove_at(i);
+i--;
+}
 continue;
 }
 string[] values;

@@ -12,8 +12,8 @@ int missilex;
 int missiley;
 int missilez;
 int remgunid=-1;
-bool helicopterspawning;
-timer helicoptertimer;
+bool helicopterspawning , robocopspawning;
+timer helicoptertimer , robocoptimer;
 double air;
 int unstuntrys;
 int storestage=0;
@@ -1004,6 +1004,14 @@ players[i].sbombtimer.pause();
 send_reliable(players[i].peer_id,"Done!",0);
 send_reliable(players[i].peer_id,"startmoving",0);
 spawn_security_bomb(round(players[i].x,0),round(players[i].y,0),players[i].z,players[i].map,players[i].name);
+}
+else if(players[i].robocopspawning==true and players[i].robocoptimer.elapsed>=6000 and players[i].map!="store")
+{
+players[i].robocopspawning=false;
+players[i].robocoptimer.pause();
+send_reliable(players[i].peer_id,"Done!",0);
+send_reliable(players[i].peer_id,"startmoving",0);
+spawn_robocop(players[i].x,players[i].y,0,players[i].map,players[i].name);
 }
 else if(players[i].helicopterspawning==true and players[i].helicoptertimer.elapsed>=4400 and players[i].map!="store")
 {

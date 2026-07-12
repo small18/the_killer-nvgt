@@ -17,6 +17,8 @@ file fl;
 int connections=0, disconnections=0;
 bool beta=false;
 timer savetimer;
+bool server_shutting_down=false;
+async<void>@ server_loop_task;
 int writeprefs=1;
 int chatting=1;
 int objgrabs=0, objspawns=0;
@@ -112,7 +114,8 @@ show_window("TK server v"+version);
 speak("TK server active");
 log("svr","The Killer server started.");
 log ("error","start");
-async<void> call (loops);
+start_robot_path_worker();
+@server_loop_task=async<void>(loops);
 while(true)
 {
 if(savetimer.elapsed>=10000&&writeprefs==1)
@@ -197,6 +200,7 @@ speak(objspawns+","+objgrabs + "," + players.length ());
 
 void net_loop ()
 {
+if(server_shutting_down) return;
 //while (true)
 //{
 //wait (1);
@@ -270,8 +274,10 @@ send_reliable(0,"Auction finished! Item sold to "+players[index2].nickname,2);
 }
 }
 }
+if(server_shutting_down) return;
 network_event e = n.request();
 //mutex_lock(t_net_loop_mutex);
+if(server_shutting_down) return;
 string s;
 if(e.type==event_disconnect)
 {
@@ -1908,6 +1914,20 @@ else if(wname=="death_free_card")
 takeobj=true;
 players[index].death_free_cards+=1;
 players[index].playsound("dfcuse");
+}
+else if(wname=="robocop"&&players[index].robocopspawning==false)
+{
+if(players[index].statchangetimer.elapsed<20000){
+send_reliable(players[index].peer_id,"you can't launch the robocop",0);
+return;
+}
+takeobj=true;
+send_reliable(0, players[index].name+" Is launching a robocop!", 2);
+send_reliable(players[index].peer_id,"stopmoving",0);
+players[index].playsound("robocopstart");
+players[index].robocoptimer.restart();
+players[index].statchangetimer.restart();
+players[index].robocopspawning=true;
 }
 else if(wname=="helicopter"&&players[index].helicopterspawning==false)
 {
@@ -7264,6 +7284,7 @@ for(uint i=0; i<objs.length(); i++)
 {
 play("obj_break"+random(1,3),objs[i].x,objs[i].y,objs[i].z,objs[i].map);
 remove_obj(i);
+i--;
 }
 send_reliable(players[index].peer_id,killobjs+" items killed",2);
 }
@@ -7721,7 +7742,7 @@ send_reliable(0, sound+"|"+x+"|"+y+"|"+z+"|"+map, channel);
 }
 void loops()
 {
-while (true)
+while (!server_shutting_down)
 {
 try
 {
@@ -7767,6 +7788,7 @@ gploop();
 rpgloop();
 nuclear_bombloop();
 helicopterloop ();
+//robocoploop();
 robotsloop();
 if(players.length()<=0) {
 objs.resize(0);
@@ -8316,10 +8338,13 @@ void server_quit ()
 {
 send_reliable(0,"notify|The server is shutting down",0);
 send_reliable(0,"server_quit",0);
+server_shutting_down=true;
+if (@server_loop_task!=null) {server_loop_task.try_wait(1000);}
+stop_robot_path_worker();
 saveloop();
-for(uint i = 0; i < players.length(); i++)
+while(players.length()>0)
 {
-remove_player(players[i].name);
+remove_player(players[0].name);
 }
 team_save();
 exit ();
@@ -8675,12 +8700,13 @@ sellsend+=temparray[i]+" for "+tempkey+" coins a piece:"+temparray[i]+"[]";
 sellsend=string_trim_right(sellsend,2);
 }
 void givegift() {
-if (players.length()<1)
+if (server_shutting_down or players.length()<1 or gifts.length()<1)
 {
 return;
 }
 int gifted=random(0,players.length()-1);
 string gift=gifts[random(0,gifts.length()-1)];
+if (gifted<0 or gifted>=players.length()) {return;}
 players[gifted].give(gift,1);
 send_reliable(0,"A random gift has been given out. The recipient, randomly chosen, was "+players[gifted].name+", and they have received "+gift,2);
 send_reliable(players[gifted].peer_id,"the server has given you a gift! The item is "+gift,2);
@@ -8688,6 +8714,7 @@ play("gift",players[gifted].x,players[gifted].y,players[gifted].z,players[gifted
 }
 void giftloop()
 {
+if(server_shutting_down) return;
 if(gifttimer.elapsed>=300000 and gifting==1 and players.length()>0)
 {
 gifttimer.restart();

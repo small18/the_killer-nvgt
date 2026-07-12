@@ -478,4 +478,4 @@ zone:298:298:384:500:0:10:West of The Super Dome
 vending_machine:5:95:30
 ;noitems:0:0:100:100:0:0:security_bomb:mine:wirebomb:motion_bomb:ultrabomb:remote_gun
 #door:0:0:0:11:50:60:40:door1.ogg:car1.ogg:1:door1close.ogg
-robots:0:500:0:500:0:0:10:5000:boxer,amphibian,bear
+robots:0:500:0:500:0:0:10:5000:boxer,bear

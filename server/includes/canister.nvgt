@@ -44,8 +44,8 @@ players[i2].air+=random(20,80);
 play("canisterhit",players[i2].x,players[i2].y,players[i2].z,players[i2].map);
 }
 }
-@canisters[i]=null;
 canisters.remove_at(i);
+i--;
 }
 }
 }

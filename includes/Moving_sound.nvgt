@@ -2,7 +2,7 @@ class msound
 {
 string id,soundloop,map;
 int x,y,z,loopint;
-double pitch;
+double pitch,pending_pitch;
 msound(string i, string l, int c1, int c2,int c3,string cm,double pi)
 {
 id=i;
@@ -11,6 +11,7 @@ x=c1;
 y=c2;
 z=c3;
 pitch=pi;
+pending_pitch=pi;
 if(cm==mapname) loopint=mpool.play_extended(3,soundloop,sound_default_pack,me.x,me.y,me.z,x,y,z,calculate_theta(facing),0,0,0,0,0,0,true,0,0,0,pitch,false);
 else loopint=-5;
 this.map=cm;
@@ -36,6 +37,7 @@ mpool.update_sound_start_values(loopint,0,0,pitch);
 }
 }
 msound@[] msounds;
+timer msound_update_timer;
 void createmsound(string id, string loop, int x, int y,int z,string map,double pitch)
 {
 msound m1(id,loop,x,y,z,map,pitch);
@@ -45,7 +47,14 @@ void updatemsound(string id, int x, int y,int z,double pitch)
 {
 for(uint i=0; i<msounds.length(); i++)
 {
-if(msounds[i].id==id) msounds[i].updateme(x,y,z,pitch);
+if(msounds[i].id==id)
+{
+msounds[i].x=x;
+msounds[i].y=y;
+msounds[i].z=z;
+msounds[i].pending_pitch=pitch;
+return;
+}
 }
 }
 void destroymsound(string id)
@@ -56,28 +65,32 @@ if(msounds[i].id==id)
 {
 mpool.destroy_sound(msounds[i].loopint);
 msounds.remove_at(i);
+i--;
 continue;
 }
 }
 }
 void destroy_all_msounds()
 {
-for(uint i=0; i<msounds.length(); i++)
+while(msounds.length()>0)
 {
-destroymsound(msounds[i].id);
+destroymsound(msounds[0].id);
 }
 }
 void msound_map_update()
 {
 for(uint i=0; i<msounds.length(); i++)
 {
-msounds[i].updateme(msounds[i].x,msounds[i].y,msounds[i].z,msounds[i].pitch);
+msounds[i].updateme(msounds[i].x,msounds[i].y,msounds[i].z,msounds[i].pending_pitch);
 }
 }
 void msoundcheckloop()
 {
+if(msound_update_timer.elapsed<get_audio_refresh_interval()) return;
+msound_update_timer.restart();
 for(uint i=0; i<msounds.length(); i++)
 {
+msounds[i].updateme(msounds[i].x,msounds[i].y,msounds[i].z,msounds[i].pending_pitch);
 if(msounds[i].map==mapname and msounds[i].loopint!=-5)
 {
 bool dist=get_total_distance(me.x,me.y,me.z,msounds[i].x,msounds[i].y,msounds[i].z,75);

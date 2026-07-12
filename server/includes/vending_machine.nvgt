@@ -132,15 +132,14 @@ void remove_vending_machine(int index)
 if(index>-1)
 {
 destroy_moving_sound(vending_machines[index].mid);
-@vending_machines[index]=null;
 vending_machines.remove_at(index);
 }
 }
 void remove_all_vending_machines()
 {
-for(uint i=0; i<vending_machines.length(); i++)
+while(vending_machines.length()>0)
 {
-remove_vending_machine(i);
+remove_vending_machine(0);
 }
 }
 void insert_prices(vending_machine@vnt,string itemlist,string amounts)
@@ -167,6 +166,10 @@ void clear_vending_machines_on_map(string mapname)
 {
 for(uint i=0; i<vending_machines.length(); i+=1)
 {
-if(vending_machines[i].map==mapname) remove_vending_machine(i);
+if(vending_machines[i].map==mapname)
+{
+remove_vending_machine(i);
+i--;
+}
 }
 }

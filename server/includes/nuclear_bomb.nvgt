@@ -147,8 +147,8 @@ if(hit)
 int index = get_player_index_from(nuclear_bombs[i].owner);
 if(index>-1) send_reliable(players[index].peer_id,"play_s|weaponping.ogg",0);
 }
-@nuclear_bombs[i]=null;
 nuclear_bombs.remove_at(i);
+i--;
 continue;
 }
 }
