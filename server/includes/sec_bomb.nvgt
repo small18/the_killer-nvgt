@@ -133,8 +133,8 @@ for(uint v=0; v<vs.length(); v++)
 if(get_3d_distance(security_bombs[i].x,security_bombs[i].y,security_bombs[i].z,vs[v].x,vs[v].y,vs[v].z)<=20&&vs[v].map==security_bombs[i].map)
 vs[v].hit(random(8000,15000),security_bombs[i].owner+"'s security bomb");
 }
-@security_bombs[i]=null;
 security_bombs.remove_at(i);
+i--;
 }
 }
 }

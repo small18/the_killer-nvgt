@@ -30,8 +30,8 @@ if(px>-1)
 players[px].sitting=1;
 send_reliable(players[px].peer_id,"sitstart",0);
 }
-@bodyfalls[i]=null;
 bodyfalls.remove_at(i);
+i--;
 continue;
 }
 }

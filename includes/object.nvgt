@@ -46,7 +46,6 @@ objs.insert_last(o1);
 void remove_obj(int it)
 {
 if(it>objs.length()-1||it<0) return;
-@objs[it]=null;
 objs.remove_at(it);
 }
 void load_obj(string data)

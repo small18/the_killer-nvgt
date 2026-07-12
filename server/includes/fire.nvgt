@@ -70,8 +70,8 @@ if(fires[i].lifetimer.elapsed>=fires[i].lifetime)
 {
 destroy_moving_sound(fires[i].smid);
 play("fireout",fires[i].x,fires[i].y,fires[i].z,fires[i].map);
-@fires[i]=null;
 fires.remove_at(i);
+i--;
 }
 }
 }

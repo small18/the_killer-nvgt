@@ -147,6 +147,7 @@ if(get_3d_distance(ultrabombs[i].x,ultrabombs[i].y,ultrabombs[i].z,vs[v].x,vs[v]
 vs[v].hit(random(5000,15000),ultrabombs[i].owner+"'s ultrabomb","artillery");
 }
 ultrabombs.remove_at(i);
+i--;
 }
 }
 }

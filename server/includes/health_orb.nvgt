@@ -50,8 +50,8 @@ for(uint i=0; i<horbs.length(); i++)
 {
 if(horbs[i].dead)
 {
-@horbs[i]=null;
 horbs.remove_at(i);
+i--;
 continue;
 }
 horbs[i].loop();

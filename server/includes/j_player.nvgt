@@ -74,8 +74,8 @@ for(uint i=0; i<jplayers.length(); i++)
 {
 jplayers[i].jstarted=false;
 destroy_moving_sound(jplayers[i].musicloop);
-@jplayers[i]=null;
 jplayers.remove_at(i);
+i--;
 continue;
 }
 }

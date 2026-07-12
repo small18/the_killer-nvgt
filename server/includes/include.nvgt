@@ -74,3 +74,4 @@
 #include "helicopter.nvgt"
 #include "robot.nvgt"
 #include "weapon_data.nvgt"
+#include "robocop.nvgt"

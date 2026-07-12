@@ -7,10 +7,21 @@ string _get_sounds_(string sound_name)
 return sound_name;
 //return "sounds/"+sound_name;
 }
+int get_audio_refresh_interval()
+{
+if(audio_refresh_rate==30) return 33;
+if(audio_refresh_rate==60) return 16;
+if(audio_refresh_rate==90) return 11;
+if(audio_refresh_rate==120) return 8;
+audio_refresh_rate=60;
+return 16;
+}
 void pos()
 {
 mr.x=round(me.x,0);
 mr.y=round(me.y,0);
+if(audio_listener_update_timer.elapsed<get_audio_refresh_interval()) return;
+audio_listener_update_timer.restart();
 tp.update_listener_3d(me.x, me.y, me.z, calculate_theta(facing));
 p.update_listener_3d(me.x, me.y, me.z, calculate_theta(facing));
 sourcepool.update_listener_3d(me.x, me.y, me.z, calculate_theta(facing));

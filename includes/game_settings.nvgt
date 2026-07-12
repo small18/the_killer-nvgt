@@ -15,7 +15,9 @@ int output_device_temp = currently_output_device;
 sound menu_sound;
 int ms;
 int HRTF;
+int arf;
 int sl =0;
+int[] audio_refresh_rates={30,60,90,120};
 audio_form f_UI;
 f_UI.create_window();
 if (sidescrolling==0)
@@ -50,6 +52,12 @@ HRTF= f_audio.create_checkbox("&3d audio system",false);
 else
 {
 HRTF= f_audio.create_checkbox("&3d audio system",true);
+}
+arf = f_audio.create_list("&audio refresh rate");
+for(uint i=0; i<audio_refresh_rates.length(); i++)
+{
+f_audio.add_list_item(arf,audio_refresh_rates[i]);
+if(audio_refresh_rate==audio_refresh_rates[i]) f_audio.set_list_position(arf,i);
 }
 int sd = f_audio.create_button("Select &device");
 audio_form f_tts;
@@ -131,6 +139,9 @@ else
 global_hrtf = false;
 }
 set_sound_global_hrtf(global_hrtf);
+int arf_pos = f_audio.get_list_position(arf);
+if(arf_pos<0 or arf_pos>=audio_refresh_rates.length()) arf_pos=1;
+audio_refresh_rate=audio_refresh_rates[arf_pos];
 musictrack="menumus"+string_to_number (sl + 1)+".ogg";
 menu_sound.pause ();
 currently_input_device = input_device_temp;

@@ -65,7 +65,10 @@ void wdata_check()
 for(uint i = 0; i < wdata.length(); i++)
 {
 if(@wdata[i].data==null)
+{
 wdata.remove_at(i);
+i--;
+}
 }
 }
 void init_weapon_system()
@@ -130,7 +133,10 @@ weapon_data@[] w = wdata;
 for(uint i = 0; i < w.length(); i++)
 {
 if(!w[i].requires_ammo)
+{
 w.remove_at(i);
+i--;
+}
 }
 return w;
 }

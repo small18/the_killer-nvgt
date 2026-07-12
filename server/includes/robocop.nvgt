@@ -1,0 +1,107 @@
+robocop@[] robocops(0);
+class robocop
+{
+int x;
+int y;
+int z;
+string map;
+string loop;
+string zone;
+string owner;
+string hitby;
+timer firetimer;
+timer mtimer;
+int mtime=400;
+timer deadtimer;
+int health=random(1000,100000);
+int id=random(1,100);
+robocop(int sx,int sy,int sz,string smap,string soner)
+{
+x=sx;
+y=sy;
+z=sz;
+map=smap;
+owner=soner;
+loop=spawn_moving_sound("robocop_loop.ogg",x,y,z,map);
+}
+}
+void robocoploop()
+{
+for(uint i=0; i<robocops.length(); i++)
+{
+if(robocops[i].deadtimer.elapsed>900000)
+{
+destroy_moving_sound(robocops[i].loop);
+robocops[i].health=-1;
+robocops[i].hitby="dead battery";
+robocops.remove_at(i);
+i--;
+continue;
+}
+int oindex=get_player_index_from(robocops[i].owner);
+if(oindex<0)
+{
+destroy_moving_sound(robocops[i].loop);
+robocops.remove_at(i);
+i--;
+continue;
+}
+if(robocops[i].health<0)
+{
+play("robocop_kill",robocops[i].x,robocops[i].y,robocops[i].z,robocops[i].map);
+send_reliable(0,"play_s robotkillalert.ogg",0);
+send_reliable(0,"playerdeath|"+killmsg(robocops[i].owner+"'s robocop "+robocops[i].id,robocops[i].hitby,robocops[i].map),0);
+destroy_moving_sound(robocops[i].loop);
+players[i].kills+=1;
+robocops.remove_at(i);
+i--;
+continue;
+}
+int index=get_nearest_player(robocops[i].x,robocops[i].y,robocops[i].z,robocops[i].map,oindex);
+if(index>-1)
+{
+if(in_vehicle(players[index].name)>-1 or players[index].newb==1 or players[index].is_dead or players[index].invinsible) continue;
+int miss=random(1,40);
+int dist=get_2d_distance(robocops[i].x,robocops[i].y,players[index].x,players[index].y);
+if(dist<25 and robocops[i].firetimer.elapsed>1000 and index!=oindex and players[index].z==robocops[i].z)
+{
+robocops[i].firetimer.restart();
+play("robocop_shoot",robocops[i].x,robocops[i].y,robocops[i].z,robocops[i].map);
+send_reliable(0,"distsound|police_car_weapon_fire_dist "+robocops[i].x+"|"+robocops[i].y+"|"+robocops[i].z+"|"+robocops[i].map,0);
+if(miss<40)
+{
+if(players[index].shielded)
+{
+players[index].playsound("shieldhit"+random(1,12));
+players[index].shieldshots-=random(1,150);
+}
+else
+{
+players[index].hit(1000,120000);
+players[index].hitby=robocops[i].owner+"'s robocop "+robocops[i].id;
+players[index].playsound("robocop_hit");
+}
+}
+}
+if(robocops[i].mtimer.elapsed>robocops[i].mtime)
+{
+robocops[i].mtimer.restart();
+if(robocops[i].x<players[index].x)
+robocops[i].x++;
+else if(robocops[i].x>players[index].x)
+robocops[i].x--;
+if(robocops[i].y<players[index].y)
+robocops[i].y++;
+if(robocops[i].y>players[index].y)
+robocops[i].y--;
+play("robocop_step"+random(1,2),robocops[i].x,robocops[i].y,robocops[i].z,robocops[i].map);
+update_moving_sound(robocops[i].loop,robocops[i].x,robocops[i].y,robocops[i].z);
+}
+}
+}
+}
+void spawn_robocop(int x,int y,int z,string map,string owner)
+{
+robocop s(x,y,z,map,owner);
+robocops.insert_last(s);
+}

@@ -59,6 +59,7 @@ speak("stop tracking "+tracking_player.name);
 @tracking_player=null;
 }
 players.remove_at(i);
+i--;
 }
 }
 }

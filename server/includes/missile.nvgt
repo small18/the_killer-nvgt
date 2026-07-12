@@ -51,6 +51,7 @@ if(@missiles[i].owner==null)
 {
 destroy_moving_sound(missiles[i].mid);
 missiles.remove_at(i);
+i--;
 continue;
 }
 if(missiles[i].intercepted==false)
@@ -171,8 +172,8 @@ if(hit=="") hit="nothing";
 missiles[i].owner.sendpacket("play_s|weaponping.ogg",0);
 missiles[i].owner.sendpacket("Your missile hit "+hit+"! ", 2);
 }
-@missiles[i]=null;
 missiles.remove_at(i);
+i--;
 continue;
 }
 if(missiles[i].mtimer.elapsed>missiles[i].mtime)
@@ -197,8 +198,8 @@ if(missiles[i].intercepted==true and missiles[i].intercepttimer.elapsed>=1140)
 {
 missiles[i].intercepttimer.restart();
 spawn_obj(missiles[i].x,missiles[i].y,missiles[i].z,missiles[i].map,"guided_missile",1,false);
-@missiles[i]=null;
 missiles.remove_at(i);
+i--;
 continue;
 }
 }

@@ -27,6 +27,7 @@ if(is_on_server(teammembers[j])==false)
 {
 if(buffermembers.find(teammembers[j])<=0) buffermembers.insert_last(teammembers[j]);
 teammembers.remove_at(j);
+j--;
 }
 }
 }
@@ -76,6 +77,7 @@ for(uint t=0; t<teammembers.length(); t++)
 if(teammembers[t]==name)
 {
 teammembers.remove_at(t);
+t--;
 if(index>-1)
 {
 players[index].teamname="";
@@ -120,6 +122,7 @@ for(uint t=0; t<teammembers.length(); t++)
 if(teammembers[t]==name)
 {
 teammembers.remove_at(t);
+t--;
 transmit(name+" left the team!");
 transmit("play_s|teamleave.ogg",false,0);
 send_reliable(0,"update_player_teamname|"+players[index].name+"|[empty]",0);
@@ -249,7 +252,6 @@ if(@js==null) continue;
 if(js["name"]==teams[i].teamname) jsa.remove(j);
 }
 file_put_contents("teams/teams.json",jsa.stringify());
-@teams[i]=null;
 teams.remove_at(i);
 return;
 }
@@ -351,7 +353,11 @@ teams[x].teammembers.insert_last(temp[i]);
 }
 for(uint i=0; i<teams[x].teammembers.length (); i++)
 {
-if(teams[x].teammembers[i]=="" or teams[x].teammembers[i]==" ") teams[x].teammembers.remove_at(i);
+if(teams[x].teammembers[i]=="" or teams[x].teammembers[i]==" ")
+{
+teams[x].teammembers.remove_at(i);
+i--;
+}
 }
 if(json_o.exists("maxmembers"))
 teams[x].maxmembers=json_o["maxmembers"];
@@ -371,7 +377,11 @@ teams[x].buffermembers.insert_last(temp[i]);
 }
 for(uint i=0; i<teams[x].buffermembers.length (); i++)
 {
-if(teams[x].buffermembers[i]=="" or teams[x].buffermembers[i]==" ") teams[x].buffermembers.remove_at(i);
+if(teams[x].buffermembers[i]=="" or teams[x].buffermembers[i]==" ")
+{
+teams[x].buffermembers.remove_at(i);
+i--;
+}
 }
 if(json_o.exists("password"))
 teams[x].password=json_o["password"];

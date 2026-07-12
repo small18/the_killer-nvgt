@@ -103,6 +103,7 @@ if(index>-1)
 players[index].rbombs-=1;
 }
 remote_timebombs.remove_at(i);
+i--;
 }
 }
 }

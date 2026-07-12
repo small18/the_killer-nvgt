@@ -96,6 +96,7 @@ if(get_3d_distance(wirebombs[i].x,wirebombs[i].y,wirebombs[i].z,vs[v].x,vs[v].y,
 vs[v].hit(random(500,1500),wirebombs[i].owner+"'s wirebomb");
 }
 wirebombs.remove_at(i);
+i--;
 continue;
 }
 }

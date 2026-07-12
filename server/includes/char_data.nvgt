@@ -229,13 +229,17 @@ void clear_charstuff(string n)
 for(uint i=0; i<motion_bombs.length(); i++)
 {
 if(motion_bombs[i].owner==n)
+{
 motion_bombs.remove_at(i);
+i--;
+}
 }
 for(uint i=0; i<remote_timebombs.length(); i++)
 {
 if(remote_timebombs[i].owner==n)
 {
 remote_timebombs.remove_at(i);
+i--;
 }
 }
 }

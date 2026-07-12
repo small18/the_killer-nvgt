@@ -111,8 +111,8 @@ if(shipments[i].x==shelters[j].x and shipments[i].y==shelters[j].y and shipments
 string newid=randomstring(7);
 spawn_timeitem(shipments[i].x,shipments[i].y,shipments[i].z,shipments[i].map,"shipment_"+newid,1,2998);
 new_shipment_item(shipments[i].inv,newid);
-@shipments[i]=null;
 shipments.remove_at(i);
+i--;
 }
 }
 }

@@ -83,6 +83,7 @@ if(sirens[i].id==id)
 sirens[i].loop.stop();
 sirens[i].loop.close();
 sirens.remove_at(i);
+i--;
 continue;
 }
 }
