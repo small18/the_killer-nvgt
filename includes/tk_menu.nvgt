@@ -40,20 +40,41 @@ class dynamic_menu_pro
 	string open_sound,click_sound,edge_sound,wrap_sound,enter_sound;
 	bool wrap,enable_first_letter_navigation,enable_side_scrolling,enable_left_and_right,enable_up_and_down,enable_home_and_end,letters_autoactivate;
 	bool running=false;
+	bool running_side_menu=false;
 	int forced_result=0;
 	sound music;
+	audio_form side_form;
+	int side_list=-1;
+	int side_ok=-1;
+	int side_cancel=-1;
+	int side_position=0;
+	bool side_left_held=false;
+	bool side_right_held=false;
+	int side_left_repeat=500;
+	int side_right_repeat=500;
+	timer side_left_timer;
+	timer side_right_timer;
 
 	bool reset(bool completely)
 	{
 		inner.reset(true);
+		side_form.reset();
 		item_list.resize(0);
 		@callback_handle=null;
 		callback_data="";
 		forced_result=0;
 		running=false;
+		running_side_menu=false;
+		side_position=0;
+		side_left_held=false;
+		side_right_held=false;
+		side_left_repeat=500;
+		side_right_repeat=500;
+		side_left_timer.restart();
+		side_right_timer.restart();
 		if (completely) {
 			open_sound=""; click_sound=""; edge_sound=""; wrap_sound=""; enter_sound="";
-			wrap=false; enable_first_letter_navigation=true; enable_side_scrolling=false;
+			wrap=true; enable_first_letter_navigation=true; enable_side_scrolling=false;
 			enable_left_and_right=false; enable_up_and_down=true; enable_home_and_end=true;
 			letters_autoactivate=false;
 		} // if.completely.
@@ -95,6 +116,7 @@ class dynamic_menu_pro
 	int get_position()
 	{
 		if (!running) {return(-1);}
+		if (running_side_menu) {return(side_position+1);}
 		return(inner.focused_item+1);
 	} // method.get_position.
 
@@ -128,6 +150,7 @@ class dynamic_menu_pro
 
 	int run_extended(string intro, bool is_intro_tts, int start_position, bool auto_speak_first)
 	{
+		if (enable_side_scrolling) {return(run_side_extended(intro,is_intro_tts,start_position,auto_speak_first));}
 		inner.reset(true);
 		inner.open_sound=open_sound;
 		inner.click_sound=click_sound;
@@ -159,6 +182,163 @@ class dynamic_menu_pro
 		if (inner.selected_item<0) {return(0);}
 		return(inner.selected_item+1);
 	} // method.run_extended.
+
+	private double get_side_sound_pan()
+	{
+		int count=get_item_count();
+		if (count<=0) {return(0);}
+		return(((side_position+1)*100.0/count)-50.0);
+	} // method.get_side_sound_pan.
+
+	private bool play_side_sound(string soundpath, bool positioned)
+	{
+		if (soundpath=="") {return(false);}
+		sound@ handle=sound_play(soundpath);
+		if (@handle==null) {return(false);}
+		if (positioned) {handle.pan=get_side_sound_pan();}
+		return(true);
+	} // method.play_side_sound.
+
+	private bool move_side_cursor(int direction)
+	{
+		int count=get_item_count();
+		if (count<=0) {return(false);}
+		side_position=side_form.get_list_position(side_list);
+		if (side_position<0) {side_position=0;}
+		int target=side_position+direction;
+		if (target<0 or target>=count) {
+			if (!wrap) {
+				play_side_sound(edge_sound,true);
+				return(true);
+			} // if.no_wrap.
+			target=(direction>0)? 0 : count-1;
+			play_side_sound(wrap_sound,false);
+			stop_speech();
+			wait(10);
+		} // if.boundary.
+		side_position=target;
+		side_form.set_list_position(side_list,side_position,true);
+		play_side_sound(click_sound,true);
+		return(true);
+	} // method.move_side_cursor.
+
+	private int on_side_form_list_event(audio_form@ f, int c, control_event_type event, dictionary@ args)
+	{
+		if (event!=event_list_cursor) {return(0);}
+		side_position=f.get_list_position(side_list);
+		if (args.exists("boundary")) {
+			if (!wrap) {
+				play_side_sound(edge_sound,true);
+				return(0);
+			} // if.no_wrap.
+			int key=int(args["key"]);
+			int pos=(key==KEY_DOWN or key==KEY_RIGHT)? 0 : f.get_list_count(side_list)-1;
+			side_position=pos;
+			play_side_sound(wrap_sound,false);
+			stop_speech();
+			wait(10);
+			f.set_list_position(side_list,pos,true);
+			play_side_sound(click_sound,true);
+			return(1);
+		} // if.boundary.
+		play_side_sound(click_sound,true);
+		return(0);
+	} // method.on_side_form_list_event.
+
+	private int run_side_extended(string intro, bool is_intro_tts, int start_position, bool auto_speak_first)
+	{
+		side_form.reset();
+		side_form.create_window();
+		side_list=side_form.create_list("Menu", repeat_boundary_items : true);
+		side_form.set_event_callback(side_list,on_control_event_callback(on_side_form_list_event));
+		side_ok=side_form.create_button("OK",true);
+		side_form.set_state(side_ok,true,false);
+		side_cancel=side_form.create_button("Cancel",false,true);
+		side_form.set_state(side_cancel,true,false);
+		side_form.focus_silently(side_list);
+		side_form.set_list_multinavigation(side_list,enable_first_letter_navigation,false);
+		for (uint i=0; i<item_list.length(); i++) {
+			side_form.add_list_item(side_list,item_list[i].option,item_list[i].name,-1,false,false);
+		} // for.items.
+		if (item_list.length()==0) {return(0);}
+		side_position=0;
+		if (start_position>0 and start_position<=item_list.length()) {side_position=start_position-1;}
+		side_form.set_list_position(side_list,side_position,false);
+		forced_result=0;
+		running=true;
+		running_side_menu=true;
+		play_side_sound(open_sound,false);
+		if (intro!="") {speak(intro,true);}
+		side_form.set_list_position(side_list,side_position,true);
+		while (true) {
+			if (@callback_handle!=null) {
+				int result=callback_handle(this,callback_data);
+				if (result>0) {forced_result=result;}
+			} // if.callback.
+			if (forced_result>0) {
+				running=false;
+				running_side_menu=false;
+				return(forced_result);
+			} // if.forced.
+			side_form.monitor();
+			side_position=side_form.get_list_position(side_list);
+			if (!key_down(KEY_LEFT)) {
+				side_left_held=false;
+				side_left_repeat=500;
+				side_left_timer.restart();
+			} // if.left_up.
+			else if (enable_left_and_right) {
+				if (!side_left_held) {
+					side_left_held=true;
+					side_left_repeat=500;
+					side_left_timer.restart();
+					move_side_cursor(-1);
+					continue;
+				} // if.left_first.
+				else if (side_left_timer.elapsed>=side_left_repeat) {
+					side_left_repeat=50;
+					side_left_timer.restart();
+					move_side_cursor(-1);
+					continue;
+				} // if.left_repeat.
+			} // if.left_down.
+			if (!key_down(KEY_RIGHT)) {
+				side_right_held=false;
+				side_right_repeat=500;
+				side_right_timer.restart();
+			} // if.right_up.
+			else if (enable_left_and_right) {
+				if (!side_right_held) {
+					side_right_held=true;
+					side_right_repeat=500;
+					side_right_timer.restart();
+					move_side_cursor(1);
+					continue;
+				} // if.right_first.
+				else if (side_right_timer.elapsed>=side_right_repeat) {
+					side_right_repeat=50;
+					side_right_timer.restart();
+					move_side_cursor(1);
+					continue;
+				} // if.right_repeat.
+			} // if.right_down.
+			if (side_form.is_pressed(side_cancel)) {
+				running=false;
+				running_side_menu=false;
+				return(0);
+			} // if.cancel.
+			if (side_form.is_pressed(side_ok)) {
+				if (side_position<0 or side_position>=item_list.length()) {continue;}
+				play_side_sound(enter_sound,true);
+				if (!item_list[side_position].activate) {continue;}
+				running=false;
+				running_side_menu=false;
+				return(side_position+1);
+			} // if.ok.
+			wait(5);
+		} // while.running.
+		return(0);
+	} // method.run_side_extended.
 } // class.dynamic_menu_pro.
 
 dynamic_menu_pro m;
