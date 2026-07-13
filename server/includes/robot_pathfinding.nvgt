@@ -14,48 +14,93 @@ class RobotPathResult
 	string path_data;
 } // class.RobotPathResult.
 
+class RobotCachedPathfinder
+{
+	string map;
+	pathfinder@ pf;
+} // class.RobotCachedPathfinder.
+
 string robot_path_map;
 int robot_path_max_x,robot_path_max_y,robot_path_max_z;
 bool robot_path_ignore_ground;
 fast_mutex robot_path_queue_mutex;
+fast_mutex robot_path_cache_mutex;
 RobotPathRequest@[] robot_path_requests;
 RobotPathResult@[] robot_path_results;
+RobotCachedPathfinder@[] robot_flying_pathfinders;
+dictionary robot_path_result_cache;
+string[] robot_path_result_cache_keys;
 async<void>@ robot_path_worker;
 int robot_path_worker_started=0;
 int robot_path_worker_stopping=0;
+const int ROBOT_PATH_CACHE_MAX=500;
+const int ROBOT_PATHFINDER_CACHE_RANGE=120;
+
+string robot_path_cache_key (int sx, int sy, int sz, int tx, int ty, int tz, string mapname, bool ignore_ground=false, int search_range=80)
+{
+	return(mapname+"|"+(ignore_ground ? "1" : "0")+"|"+search_range+"|"+sx+","+sy+","+sz+"|"+tx+","+ty+","+tz);
+} // func.robot_path_cache_key.
+
+void robot_store_path_cache (string key, string path_data)
+{
+	if (!robot_path_result_cache.exists(key)) {robot_path_result_cache_keys.insert_last(key);}
+	robot_path_result_cache.set(key,path_data);
+	while (robot_path_result_cache_keys.length()>ROBOT_PATH_CACHE_MAX) {
+		string oldkey=robot_path_result_cache_keys[0];
+		robot_path_result_cache.delete(oldkey);
+		robot_path_result_cache_keys.remove_at(0);
+	} // while.cache.
+} // func.robot_store_path_cache.
+
+bool robot_get_path_cache (string key, string&out path_data)
+{
+	if (!robot_path_result_cache.exists(key)) {return(false);}
+	robot_path_result_cache.get(key,path_data);
+	return(true);
+} // func.robot_get_path_cache.
+
+pathfinder@ get_robot_flying_pathfinder (string mapname)
+{
+	for (uint i=0; i<robot_flying_pathfinders.length(); i++) {
+		if (robot_flying_pathfinders[i].map==mapname) {return(robot_flying_pathfinders[i].pf);}
+	} // for.pathfinders.
+	RobotCachedPathfinder@ entry=RobotCachedPathfinder();
+	entry.map=mapname;
+	@entry.pf=pathfinder(4096,true);
+	entry.pf.allow_diagonals=false;
+	entry.pf.automatic_reset=false;
+	entry.pf.search_range=ROBOT_PATHFINDER_CACHE_RANGE;
+	entry.pf.set_callback_function(robot_path_cost);
+	robot_flying_pathfinders.insert_last(entry);
+	return(entry.pf);
+} // func.get_robot_flying_pathfinder.
+
+void clear_robot_path_cache ()
+{
+	robot_path_queue_mutex.lock();
+	robot_path_requests.resize(0);
+	robot_path_results.resize(0);
+	robot_path_queue_mutex.unlock();
+	robot_path_cache_mutex.lock();
+	robot_path_result_cache.delete_all();
+	robot_path_result_cache_keys.resize(0);
+	for (uint i=0; i<robot_flying_pathfinders.length(); i++) {
+		if (@robot_flying_pathfinders[i].pf!=null) {robot_flying_pathfinders[i].pf.reset();}
+	} // for.pathfinders.
+	robot_path_cache_mutex.unlock();
+} // func.clear_robot_path_cache.
 
 int robot_tile_cost (int x, int y, int z, string mapname, bool ignore_ground=false)
 {
 	vector max=get_max_values(mapname);
 	if (mapname=="" or x<0 or y<0 or z<0) {return(10);}
 	if (x>round(max.x,0) or y>round(max.y,0) or z>round(max.z,0)) {return(10);}
-	int type=get_tile_type(x,y,z,mapname);
-	if (type==TILE_WALL) {return(10);}
+	string tile=string_to_lower_case(get_tile_at(x,y,z,mapname));
+	if (string_left(tile,4)=="wall") {return(10);}
 	if (ignore_ground) {return(1);}
-	if (type==TILE_NONE) {return(10);}
-	if (is_tile_water(x,y,z,mapname)) {return(4);}
-	if (is_staircase(x,y,z,mapname)) {return(2);}
+	if (tile=="" or tile=="air") {return(10);}
 	return(1);
 } // func.robot_tile_cost.
-
-bool robot_is_climbable_tile (int x, int y, int z, string mapname)
-{
-	string tile=get_tile_at(x,y,z,mapname);
-	if (tile=="") {return(false);}
-	tile=string_to_lower_case(tile);
-	if (string_contains(tile,"stair",1)>-1) {return(true);}
-	if (string_contains(tile,"ladder",1)>-1) {return(true);}
-	return(is_staircase(x,y,z,mapname));
-} // func.robot_is_climbable_tile.
-
-bool robot_can_climb_between (int x1, int y1, int z1, int x2, int y2, int z2, string mapname)
-{
-	if (z1==z2) {return(true);}
-	if (absolute(z1-z2)>1) {return(false);}
-	if (robot_is_climbable_tile(x1,y1,z1,mapname)) {return(true);}
-	if (robot_is_climbable_tile(x2,y2,z2,mapname)) {return(true);}
-	return(false);
-} // func.robot_can_climb_between.
 
 bool prepare_robot_path (string mapname, bool ignore_ground=false)
 {
@@ -73,44 +118,33 @@ int robot_path_cost (int x, int y, int z, any@ data=null)
 {
 	if (x<0 or y<0 or z<0) {return(10);}
 	if (x>robot_path_max_x or y>robot_path_max_y or z>robot_path_max_z) {return(10);}
-	int type=get_tile_type(x,y,z,robot_path_map);
-	if (type==TILE_WALL) {return(10);}
+	string tile=string_to_lower_case(get_tile_at(x,y,z,robot_path_map));
+	if (string_left(tile,4)=="wall") {return(10);}
 	if (robot_path_ignore_ground) {return(1);}
-	if (type==TILE_NONE) {return(10);}
-	if (is_tile_water(x,y,z,robot_path_map)) {return(4);}
-	if (is_staircase(x,y,z,robot_path_map)) {return(2);}
+	if (tile=="" or tile=="air") {return(10);}
 	return(1);
 } // func.robot_path_cost.
-
-int robot_path_cost_ex (int x, int y, int z, int parent_x, int parent_y, int parent_z, any@ data=null)
-{
-	if (x<0 or y<0 or z<0) {return(10);}
-	if (x>robot_path_max_x or y>robot_path_max_y or z>robot_path_max_z) {return(10);}
-	int type=get_tile_type(x,y,z,robot_path_map);
-	if (type==TILE_WALL) {return(10);}
-	if (robot_path_ignore_ground) {return(1);}
-	if (type==TILE_NONE) {return(10);}
-	if (!robot_can_climb_between(parent_x,parent_y,parent_z,x,y,z,robot_path_map)) {return(10);}
-	if (is_tile_water(x,y,z,robot_path_map)) {return(4);}
-	if (robot_is_climbable_tile(x,y,z,robot_path_map)) {return(2);}
-	return(1);
-} // func.robot_path_cost_ex.
 
 vector[]@ find_robot_path (int sx, int sy, int sz, int tx, int ty, int tz, string mapname, bool ignore_ground=false, int search_range=80)
 {
 	vector[] empty;
+	string cache_key=robot_path_cache_key(sx,sy,sz,tx,ty,tz,mapname,ignore_ground,search_range);
+	string cached_path;
+	if (robot_get_path_cache(cache_key,cached_path)) {return(robot_unpack_path(cached_path));}
 	if (!prepare_robot_path(mapname,ignore_ground)) {return(@empty);}
 	if (sx<0 or sy<0 or sz<0 or tx<0 or ty<0 or tz<0) {return(@empty);}
 	if (sx>robot_path_max_x or sy>robot_path_max_y or sz>robot_path_max_z) {return(@empty);}
 	if (tx>robot_path_max_x or ty>robot_path_max_y or tz>robot_path_max_z) {return(@empty);}
 	if (robot_path_cost(sx,sy,sz)>9 or robot_path_cost(tx,ty,tz)>9) {return(@empty);}
-	pathfinder pf(1024,false);
-	pf.allow_diagonals=false;
-	pf.automatic_reset=true;
-	pf.search_range=search_range;
-	pf.set_callback_function(robot_path_cost_ex);
+	pathfinder@ pf=get_robot_flying_pathfinder(mapname);
+	pf.search_range=ROBOT_PATHFINDER_CACHE_RANGE;
+	if (absolute(tx-sx)+absolute(ty-sy)+absolute(tz-sz)>search_range) {
+		robot_store_path_cache(cache_key,"");
+		return(@empty);
+	} // if.range.
 	vector[]@ path=pf.find(sx,sy,sz,tx,ty,tz,"");
 	if (@path==null) {return(@empty);}
+	robot_store_path_cache(cache_key,robot_pack_path(path));
 	return(path);
 } // func.find_robot_path.
 
@@ -195,7 +229,9 @@ void robot_path_worker_loop ()
 			wait(10);
 			continue;
 		} // if.empty.
+		robot_path_cache_mutex.lock();
 		vector[]@ path=find_robot_path(req.sx,req.sy,req.sz,req.tx,req.ty,req.tz,req.map,req.ignore_ground,req.search_range);
+		robot_path_cache_mutex.unlock();
 		RobotPathResult@ result=RobotPathResult();
 		result.robot_id=req.robot_id;
 		result.target_player=req.target_player;
@@ -229,5 +265,9 @@ void stop_robot_path_worker ()
 	robot_path_requests.resize(0);
 	robot_path_results.resize(0);
 	robot_path_queue_mutex.unlock();
+	robot_path_cache_mutex.lock();
+	robot_path_result_cache.delete_all();
+	robot_path_result_cache_keys.resize(0);
+	robot_path_cache_mutex.unlock();
 	robot_path_worker_started=0;
 } // func.stop_robot_path_worker.

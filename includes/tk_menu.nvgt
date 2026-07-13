@@ -1,3 +1,166 @@
+funcdef int menu_callback(dynamic_menu_pro@, string);
+dynamic_menu_pro@ active_dynamic_menu=null;
+
+void dynamic_menu_callback_bridge(menu@ source, string data)
+{
+	if (@active_dynamic_menu==null or @active_dynamic_menu.callback_handle==null) {return;}
+	int result=active_dynamic_menu.callback_handle(active_dynamic_menu,data);
+	if (result>0) {active_dynamic_menu.forced_result=result;}
+} // func.dynamic_menu_callback_bridge.
+
+void fade_menu_sound(sound@ handle, double final_volume=-100, double delay=25)
+{
+	if (@handle==null or !handle.active) {return;}
+	while (handle.volume!=final_volume) {
+		if (handle.volume>final_volume) {handle.volume-=1;}
+		else if (handle.volume<final_volume) {handle.volume+=1;}
+		wait(delay);
+	} // while.volume.
+	handle.close();
+} // func.fade_menu_sound.
+
+void fade(sound@ handle, double final_volume=-100, double delay=25)
+{
+	fade_menu_sound(handle,final_volume,delay);
+} // func.fade.
+
+class dynamic_menu_item
+{
+	string option;
+	string name;
+	bool activate;
+} // class.dynamic_menu_item.
+
+class dynamic_menu_pro
+{
+	menu inner;
+	dynamic_menu_item[] item_list;
+	menu_callback@ callback_handle=null;
+	string callback_data;
+	string open_sound,click_sound,edge_sound,wrap_sound,enter_sound;
+	bool wrap,enable_first_letter_navigation,enable_side_scrolling,enable_left_and_right,enable_up_and_down,enable_home_and_end,letters_autoactivate;
+	bool running=false;
+	int forced_result=0;
+	sound music;
+
+	bool reset(bool completely)
+	{
+		inner.reset(true);
+		item_list.resize(0);
+		@callback_handle=null;
+		callback_data="";
+		forced_result=0;
+		running=false;
+		if (completely) {
+			open_sound=""; click_sound=""; edge_sound=""; wrap_sound=""; enter_sound="";
+			wrap=false; enable_first_letter_navigation=true; enable_side_scrolling=false;
+			enable_left_and_right=false; enable_up_and_down=true; enable_home_and_end=true;
+			letters_autoactivate=false;
+		} // if.completely.
+		return(true);
+	} // method.reset.
+
+	int add_item_tts(string text, string name="", bool act=true)
+	{
+		dynamic_menu_item item;
+		item.option=text;
+		item.name=name;
+		item.activate=act;
+		item_list.insert_last(item);
+		return(item_list.length());
+	} // method.add_item_tts.
+
+	int add_item(string filename, string name="", string key="", bool act=true)
+	{
+		return(add_item_tts(filename,name,act));
+	} // method.add_item.
+
+	int add_item_tts_key(string text, string name="", string key="", bool act=true)
+	{
+		return(add_item_tts(text,name,act));
+	} // method.add_item_tts_key.
+
+	bool set_callback(menu_callback@ callback, string user_data)
+	{
+		@callback_handle=callback;
+		callback_data=user_data;
+		return(true);
+	} // method.set_callback.
+
+	int get_item_count()
+	{
+		return(item_list.length());
+	} // method.get_item_count.
+
+	int get_position()
+	{
+		if (!running) {return(-1);}
+		return(inner.focused_item+1);
+	} // method.get_position.
+
+	string get_item_name(int item)
+	{
+		if (item<1 or item>item_list.length()) {return("");}
+		return(item_list[item-1].name);
+	} // method.get_item_name.
+
+	void add_music(string musicpath)
+	{
+		if (musicpath=="") {return;}
+		if (!music.playing and music.load(musicpath)) {music.play_looped();}
+	} // method.add_music.
+
+	void fade_music(int value1)
+	{
+		fade_menu_sound(music,-100,value1);
+		music.stop();
+	} // method.fade_music.
+
+	void stop_music()
+	{
+		music.stop();
+	} // method.stop_music.
+
+	int run(string intro, bool is_intro_tts)
+	{
+		return(run_extended(intro,is_intro_tts,0,false));
+	} // method.run.
+
+	int run_extended(string intro, bool is_intro_tts, int start_position, bool auto_speak_first)
+	{
+		inner.reset(true);
+		inner.open_sound=open_sound;
+		inner.click_sound=click_sound;
+		inner.edge_sound=edge_sound;
+		inner.wrap_sound=wrap_sound;
+		inner.select_sound=enter_sound;
+		inner.wrap=wrap;
+		inner.first_letter_navigation=enable_first_letter_navigation;
+		inner.focus_first_item=true;
+		inner.intro_text=intro;
+		@active_dynamic_menu=this;
+		@inner.background_callback=dynamic_menu_callback_bridge;
+		inner.background_callback_data=callback_data;
+		for (uint i=0; i<item_list.length(); i++) {inner.add_item(item_list[i].option,item_list[i].name);}
+		if (start_position>0) {inner.focused_item=start_position-1;}
+		forced_result=0;
+		running=true;
+		while (inner.monitor()) {
+			if (forced_result>0) {
+				running=false;
+				@active_dynamic_menu=null;
+				return(forced_result);
+			} // if.forced.
+			wait(5);
+		} // while.monitor.
+		running=false;
+		@active_dynamic_menu=null;
+		if (forced_result>0) {return(forced_result);}
+		if (inner.selected_item<0) {return(0);}
+		return(inner.selected_item+1);
+	} // method.run_extended.
+} // class.dynamic_menu_pro.
+
 dynamic_menu_pro m;
 void mainmenu()
 {

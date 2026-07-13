@@ -330,6 +330,7 @@ return -1;
 }
 void init_mapsystem()
 {
+clear_robot_path_cache();
 maps.resize(0);
 string[] mapfiles=find_files("maps/*.map");
 for(uint i=0; i<mapfiles.length(); i++)

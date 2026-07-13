@@ -2,7 +2,7 @@
 #include "bgt_compat_own.nvgt"//To make development easier
 #include "dlg.nvgt"
 #include "menu.nvgt"
-#include "m_pro.nvgt"
+#include "tk_menu.nvgt"
 #include "sound_pool.nvgt"
 //#include "legacy_sound_pool.nvgt" //old_poll.nvgt"
 #include"key_hold.nvgt"
