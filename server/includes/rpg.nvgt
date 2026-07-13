@@ -1,6 +1,7 @@
 rpg@[]rpgs(0);
 class rpg {
 double x,y,z;
+timer explodetimer;
 int dir=0;
 bool explode=false;
 int range=10;
@@ -9,6 +10,7 @@ int mindammage=100000;
 int maxdammage=450000;
 string map;
 string owner;
+string mid;
 int spread=10;
 rpg(double gx, double gy, double gz, double gdir, string gmap, string gowner)
 {
@@ -18,6 +20,7 @@ z=gz;
 dir=gdir;
 map=gmap;
 owner=gowner;
+mid=spawn_moving_sound("missileloop.ogg",x,y,z,map);
 }
 }
 
@@ -25,6 +28,8 @@ void rpgloop()
 {
 for(uint j=0; j<rpgs.length(); j++)
 {
+if(rpgs[j].explodetimer.elapsed<700) continue;
+destroy_moving_sound(rpgs[j].mid);
 play("rpg7explode"+random(1,3),rpgs[j].x,rpgs[j].y,rpgs[j].z,rpgs[j].map);
 send_reliable(0,"distsound|rpg7explodedist|"+rpgs[j].x+"|"+rpgs[j].y+"|"+rpgs[j].z+"|"+rpgs[j].map,0);
 for(uint s=0; s<shelters.length(); s++)

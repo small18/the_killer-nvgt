@@ -28,7 +28,7 @@ void rocketloop()
 {
 for(uint j=0; j<rockets.length(); j++)
 {
-if(rockets[j].explodetimer.elapsed>=1750)
+if(rockets[j].explodetimer.elapsed>=1500)
 {
 rockets[j].explodetimer.restart();
 play("rocket",rockets[j].x,rockets[j].y,rockets[j].z,rockets[j].map);
