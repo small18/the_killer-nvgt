@@ -8,6 +8,7 @@ class translation_rule
 }
 
 dictionary g_exact_translations;
+dictionary g_lower_exact_translations;
 translation_rule[] g_template_translation_rules;
 string g_src_text;
 string g_trans_text;
@@ -114,16 +115,17 @@ bool match_rule_and_capture(const string&in text, const translation_rule&in rule
     args.resize(rule.max_placeholder + 1);
     for (int i = 0; i < int(args.length()); i++) args[i] = "";
 
-    string first_literal = rule.literals[0];
-    if (!text.starts_with(first_literal)) return false;
+    string search_text = text.lower();
+    string first_literal = rule.literals[0].lower();
+    if (!search_text.starts_with(first_literal)) return false;
 
     int text_length = int(text.length());
     int pos = int(first_literal.length());
 
     for (int i = 0; i < int(rule.placeholders.length()); i++)
     {
-        string next_literal = rule.literals[i + 1];
-        int found = next_literal.length() == 0 ? text_length : text.find(next_literal, pos);
+        string next_literal = rule.literals[i + 1].lower();
+        int found = next_literal.length() == 0 ? text_length : search_text.find(next_literal, pos);
         if (found < 0) return false;
 
         args[rule.placeholders[i]] = text.substr(pos, found - pos);
@@ -133,20 +135,245 @@ bool match_rule_and_capture(const string&in text, const translation_rule&in rule
     return pos == text_length;
 }
 
+void split_by_comma_separator(const string&in text, string[]&out items)
+{
+    items.resize(0);
+    int pos = 0;
+
+    while (pos <= int(text.length()))
+    {
+        int found = text.find(", ", pos);
+        if (found < 0)
+        {
+            string item = text.substr(pos).trim_whitespace();
+            if (item.length() > 0) items.insert_last(item);
+            return;
+        }
+
+        string item = text.substr(pos, found - pos).trim_whitespace();
+        if (item.length() > 0) items.insert_last(item);
+        pos = found + 2;
+    }
+}
+
+bool split_english_list(const string&in text, string[]&out items, string&out suffix)
+{
+    items.resize(0);
+    suffix = "";
+
+    string work = text.trim_whitespace();
+    if (work.length() == 0) return false;
+
+    if (work.ends_with("."))
+    {
+        suffix = "。";
+        work = work.substr(0, int(work.length()) - 1).trim_whitespace();
+    }
+
+    int last_separator = work.find(", and ");
+    if (last_separator >= 0)
+    {
+        string before_last = work.substr(0, last_separator);
+        string last_item = work.substr(last_separator + 6).trim_whitespace();
+        split_by_comma_separator(before_last, items);
+        if (last_item.length() > 0) items.insert_last(last_item);
+        return items.length() > 1;
+    }
+
+    last_separator = work.find(" and ");
+    if (last_separator >= 0)
+    {
+        string first_item = work.substr(0, last_separator).trim_whitespace();
+        string second_item = work.substr(last_separator + 5).trim_whitespace();
+        if (first_item.length() > 0) items.insert_last(first_item);
+        if (second_item.length() > 0) items.insert_last(second_item);
+        return items.length() > 1;
+    }
+
+    if (work.find(", ") >= 0)
+    {
+        split_by_comma_separator(work, items);
+        return items.length() > 1;
+    }
+
+    return false;
+}
+
+string join_translated_list(const string[]&in items, const string&in suffix)
+{
+    string result = "";
+    for (int i = 0; i < int(items.length()); i++)
+    {
+        if (i > 0)
+        {
+            if (i == int(items.length()) - 1) result += "；以及 ";
+            else result += "；";
+        }
+        result += items[i];
+    }
+    return result + suffix;
+}
+
+string translate_template_argument(const string&in text)
+{
+    string translated;
+    if (translate_without_parameters(text, translated)) return translated;
+    if (translate_special_text(text, translated)) return translated;
+    if (translate_with_parameters(text, translated)) return translated;
+
+    string[] items;
+    string suffix;
+    if (!split_english_list(text, items, suffix)) return text;
+
+    bool changed = false;
+    string[] translated_items;
+    for (int i = 0; i < int(items.length()); i++)
+    {
+        string item_translation = speak_length(items[i]);
+        if (item_translation != items[i]) changed = true;
+        translated_items.insert_last(item_translation);
+    }
+
+    if (!changed) return text;
+    return join_translated_list(translated_items, suffix);
+}
+
+string render_translation_template(const string&in text, const string[]&in args)
+{
+    string result = "";
+    int i = 0;
+
+    while (i < int(text.length()))
+    {
+        if (text.substr(i, 1) == "%" && i + 1 < int(text.length()))
+        {
+            int next_index = i + 1;
+            int placeholder = parse_placeholder_number(text, next_index, next_index);
+            if (placeholder >= 0)
+            {
+                if (placeholder < int(args.length())) result += translate_template_argument(args[placeholder]);
+                i = next_index;
+                continue;
+            }
+        }
+
+        result += text.substr(i, 1);
+        i++;
+    }
+
+    return result;
+}
+
+void set_exact_translation_variant(const string&in src, const string&in dst)
+{
+    g_exact_translations.set(src, dst);
+
+    string lower_src = src.lower();
+    if (!g_lower_exact_translations.exists(lower_src)) g_lower_exact_translations.set(lower_src, dst);
+}
+
 void add_translation_rule(const translation_rule&in rule)
 {
     if (rule.max_placeholder < 0)
     {
-        g_exact_translations.set(rule.src, rule.dst);
+        set_exact_translation_variant(rule.src, rule.dst);
+
+        if (rule.src.find("_") >= 0)
+        {
+            set_exact_translation_variant(string_replace(rule.src, "_", " ", true), rule.dst);
+        }
+        if (rule.src.find(" ") >= 0)
+        {
+            set_exact_translation_variant(string_replace(rule.src, " ", "_", true), rule.dst);
+        }
+
         return;
     }
 
     g_template_translation_rules.insert_last(rule);
 }
 
+bool get_exact_translation(const string&in text, string&out exact)
+{
+    if (g_exact_translations.get(text, exact)) return true;
+    if (g_lower_exact_translations.get(text.lower(), exact)) return true;
+
+    if (text.find(" ") >= 0)
+    {
+        string underscored = string_replace(text, " ", "_", true);
+        if (g_exact_translations.get(underscored, exact)) return true;
+        if (g_lower_exact_translations.get(underscored.lower(), exact)) return true;
+    }
+    if (text.find("_") >= 0)
+    {
+        string spaced = string_replace(text, "_", " ", true);
+        if (g_exact_translations.get(spaced, exact)) return true;
+        if (g_lower_exact_translations.get(spaced.lower(), exact)) return true;
+    }
+
+    return false;
+}
+
+bool translate_counted_inventory_text(const string&in text, string&out translated)
+{
+    int first_space = text.find(" ");
+    if (first_space <= 0) return false;
+
+    string count_text = text.substr(0, first_space);
+    if (!count_text.is_digits()) return false;
+
+    if (text.ends_with(" ammo!"))
+    {
+        if (int(text.length()) <= first_space + 7) return false;
+        string weapon_name = text.substr(first_space + 1, int(text.length()) - first_space - 7);
+        string weapon_translation = speak_length(weapon_name);
+        if (weapon_translation == weapon_name) return false;
+        translated = count_text + " 发 " + weapon_translation + " 弹药！";
+        return true;
+    }
+
+    string item_plural = text.substr(first_space + 1).trim_whitespace();
+    if (!item_plural.ends_with("s")) return false;
+
+    string item_name = item_plural.substr(0, int(item_plural.length()) - 1);
+    string item_translation = speak_length(item_name);
+    if (item_translation == item_name) return false;
+
+    translated = count_text + " 个 " + item_translation;
+    return true;
+}
+
+bool translate_without_parameters(const string&in text, string&out translated)
+{
+    return get_exact_translation(text, translated);
+}
+
+bool translate_special_text(const string&in text, string&out translated)
+{
+    return translate_counted_inventory_text(text, translated);
+}
+
+bool translate_with_parameters(const string&in text, string&out translated)
+{
+    if (has_placeholder(text)) return false;
+
+    for (int i = int(g_template_translation_rules.length()) - 1; i >= 0; i--)
+    {
+        string[] args;
+        if (match_rule_and_capture(text, g_template_translation_rules[i], args))
+        {
+            translated = render_translation_template(g_template_translation_rules[i].dst, args);
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void speak_length_start()
 {
     g_exact_translations.delete_all();
+    g_lower_exact_translations.delete_all();
     g_template_translation_rules.resize(0);
 
     file f;
@@ -165,20 +392,10 @@ void speak_length_start()
 
 string speak_length(string text)
 {
-    string exact;
-    if (g_exact_translations.get(text, exact)) return exact;
-
-    if (!has_placeholder(text))
-    {
-        for (int i = int(g_template_translation_rules.length()) - 1; i >= 0; i--)
-        {
-            string[] args;
-            if (match_rule_and_capture(text, g_template_translation_rules[i], args))
-            {
-                return g_template_translation_rules[i].dst.format(args);
-            }
-        }
-    }
+    string translated;
+    if (translate_without_parameters(text, translated)) return translated;
+    if (translate_special_text(text, translated)) return translated;
+    if (translate_with_parameters(text, translated)) return translated;
 
     return text;
 }
